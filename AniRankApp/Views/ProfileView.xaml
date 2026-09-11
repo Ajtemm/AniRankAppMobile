@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             x:Class="AniRankApp.Views.ProfileView"
+             x:DataType="vm:ProfileViewModel"
+             Title="Profil">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Border Style="{StaticResource ReviewCardStyle}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Prijavljeni korisnik" Style="{StaticResource Caption}" />
+                    <Label Text="{Binding Username}" FontSize="22" FontAttributes="Bold" />
+
+                    <Label Text="{Binding Role, StringFormat='Uloga: {0}'}" />
+                    <Label Text="{Binding LoginInfo}" Style="{StaticResource Caption}" />
+                    <Label Text="{Binding ReviewCount, StringFormat='Ukupno u mojoj listi: {0}'}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ===== Watch-status breakdown ===== -->
+            <Label Text="Moja lista po statusu" Style="{StaticResource SectionTitle}" />
+            <Border Style="{StaticResource ReviewCardStyle}">
+                <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding StatusBreakdown}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StatusCountItem">
+                            <Grid ColumnDefinitions="*,Auto" Padding="0,8">
+                                <Label Grid.Column="0" Text="{Binding Status}" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding Count}"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource PrimaryAccent}" />
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Izvoz recenzija (lokalni fajl)" Style="{StaticResource SectionTitle}" />
+            <Label Text="Sačuvaj sve svoje recenzije u fajl na telefonu i podeli ga."
+                   Style="{StaticResource Caption}" />
+
+            <Button Text="Izvezi u .json"
+                    Command="{Binding ExportJsonCommand}"
+                    IsEnabled="{Binding IsNotBusy}" />
+
+            <Button Text="Izvezi u .txt"
+                    Style="{StaticResource SubtleButton}"
+                    Command="{Binding ExportTxtCommand}"
+                    IsEnabled="{Binding IsNotBusy}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+
+            <Label Text="{Binding StatusMessage}"
+                   Style="{StaticResource Caption}"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotEmpty}}" />
+
+            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
+
+            <Button Text="Odjava"
+                    Style="{StaticResource DangerButton}"
+                    HeightRequest="46"
+                    FontSize="14"
+                    Command="{Binding LogoutCommand}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -1,0 +1,33 @@
+## .NET / Visual Studio / MAUI
+
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# MAUI resizetizer / build caches
+*.binlog
+**/bld/
+**/[Dd]ebug/
+**/[Rr]elease/
+**/x64/
+**/x86/
+**/[Aa][Rr][Mm]/
+**/[Aa][Rr][Mm]64/
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Rider / VS Code (harmless if unused)
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:model="clr-namespace:AniRankApp.Models"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
+             x:Class="AniRankApp.Views.ExploreView"
+             x:DataType="vm:ExploreViewModel"
+             Title="Istraži">
+
+    <Grid RowDefinitions="Auto,*" Padding="12,10">
+
+        <!-- ===================== HEADER + FILTERS ===================== -->
+        <VerticalStackLayout Grid.Row="0" Spacing="10">
+
+            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="0">
+                    <Label Text="AniRank" Style="{StaticResource Hero}" />
+                    <Label Text="Istraži anime iz Kitsu kataloga" Style="{StaticResource Caption}" />
+                </VerticalStackLayout>
+                <Label Grid.Column="1"
+                       Text="{Binding ResultInfo}"
+                       Style="{StaticResource Caption}"
+                       VerticalOptions="End" />
+            </Grid>
+
+            <Border Style="{StaticResource FilterCardStyle}">
+                <VerticalStackLayout Spacing="10">
+
+                    <SearchBar Placeholder="Pretraži po naslovu..."
+                               Text="{Binding SearchText}"
+                               SearchCommand="{Binding ApplyCommand}" />
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Picker Grid.Column="0"
+                                Title="Sortiranje"
+                                ItemsSource="{Binding SortOptions}"
+                                SelectedIndex="{Binding SelectedSortIndex}" />
+                        <Picker Grid.Column="1"
+                                Title="Tip"
+                                ItemsSource="{Binding TypeOptions}"
+                                SelectedIndex="{Binding SelectedTypeIndex}" />
+                        <Picker Grid.Column="2"
+                                Title="Status"
+                                ItemsSource="{Binding StatusOptions}"
+                                SelectedIndex="{Binding SelectedStatusIndex}" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Button Grid.Column="0"
+                                Text="Primeni filtere"
+                                Command="{Binding ApplyCommand}" />
+                        <Button Grid.Column="1"
+                                Text="Reset"
+                                Style="{StaticResource SubtleButton}"
+                                Command="{Binding ResetFiltersCommand}" />
+                    </Grid>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="{Binding ErrorMessage}"
+                   Margin="2,0"
+                   TextColor="{StaticResource ScoreLow}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+        </VerticalStackLayout>
+
+        <!-- ===================== RESULTS ===================== -->
+        <RefreshView Grid.Row="1"
+                     Margin="0,8,0,0"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding ApplyCommand}">
+
+            <CollectionView x:Name="AnimeList"
+                            ItemsSource="{Binding Animes}"
+                            SelectionMode="Single"
+                            SelectionChanged="OnAnimeSelected"
+                            RemainingItemsThreshold="3"
+                            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:Anime">
+
+                        <Border Style="{StaticResource AnimeCardStyle}">
+                            <Grid ColumnDefinitions="96,*" ColumnSpacing="12">
+
+                                <Border Grid.Column="0" Style="{StaticResource PosterClip}">
+                                    <Image Source="{Binding PosterUrl}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="132"
+                                           WidthRequest="96" />
+                                </Border>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+
+                                    <Label Text="{Binding Title}"
+                                           FontAttributes="Bold"
+                                           FontSize="16"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <Label Text="{Binding StatusText}" Style="{StaticResource Caption}" />
+                                    <Label Text="{Binding EpisodeText}" Style="{StaticResource Caption}" />
+                                    <Label Text="{Binding PopularityText}" Style="{StaticResource Caption}" />
+
+                                    <HorizontalStackLayout Spacing="8">
+                                        <!-- DataTrigger badge: colour depends on RatingTier -->
+                                        <Border Style="{StaticResource ScoreBadgeStyle}">
+                                            <Label Style="{StaticResource ScoreBadgeLabelStyle}"
+                                                   Text="{Binding AverageRatingText, StringFormat='API: {0}'}" />
+                                        </Border>
+
+                                        <!-- Custom control -->
+                                        <controls:RatingBar RatingValue="{Binding AverageRating}"
+                                                            MaxRating="10"
+                                                            ShowStars="True" />
+                                    </HorizontalStackLayout>
+
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <Label Text="Nema animea za prikaz. Promeni filtere ili pretragu."
+                           HorizontalOptions="Center"
+                           Margin="0,40"
+                           Style="{StaticResource Caption}" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.Footer>
+                    <Grid x:DataType="vm:ExploreViewModel" Padding="0,12" HeightRequest="48">
+                        <ActivityIndicator IsRunning="{Binding IsLoadingMore}"
+                                           IsVisible="{Binding IsLoadingMore}"
+                                           HorizontalOptions="Center" />
+                    </Grid>
+                </CollectionView.Footer>
+
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator Grid.Row="1"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+
+    </Grid>
+
+</ContentPage>

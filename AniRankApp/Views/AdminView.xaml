@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:model="clr-namespace:AniRankApp.Models"
+             x:Class="AniRankApp.Views.AdminView"
+             x:DataType="vm:AdminViewModel"
+             Title="Admin Panel">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+
+        <Label Grid.Row="0" Text="Administracija" Style="{StaticResource SectionTitle}" />
+
+        <Button Grid.Row="1"
+                Text="Sve recenzije u sistemu"
+                Style="{StaticResource SubtleButton}"
+                Command="{Binding OpenAllReviewsCommand}" />
+
+        <SearchBar Grid.Row="2"
+                   Placeholder="Pretraži korisnike (ime ili email)..."
+                   Text="{Binding UserSearch}" />
+
+        <Label Grid.Row="3"
+               Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource ScoreLow}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+        <CollectionView Grid.Row="4" ItemsSource="{Binding Users}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="model:User">
+                    <Border Style="{StaticResource ReviewCardStyle}">
+                        <VerticalStackLayout Spacing="8">
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="{Binding Username}" FontAttributes="Bold" FontSize="15" />
+                                        <Border Style="{StaticResource BanBadgeStyle}" IsVisible="{Binding IsBanned}">
+                                            <Label Style="{StaticResource BanBadgeLabelStyle}" Text="BANOVAN" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Email}" Style="{StaticResource Caption}" />
+                                    <Label Text="{Binding CreatedAtText, StringFormat='Registrovan: {0}'}" Style="{StaticResource Caption}" />
+                                </VerticalStackLayout>
+
+                                <Label Grid.Column="1"
+                                       Text="{Binding Role}"
+                                       VerticalOptions="Center"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource PrimaryAccent}" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Button Grid.Column="0"
+                                        Text="Pogledaj recenzije"
+                                        Style="{StaticResource SubtleButton}"
+                                        HeightRequest="38"
+                                        FontSize="12"
+                                        Clicked="OnOpenUserReviewsClicked" />
+                                <Button Grid.Column="1"
+                                        Text="{Binding BanActionText}"
+                                        Style="{StaticResource BanButtonStyle}"
+                                        Clicked="OnToggleBanClicked" />
+                                <Button Grid.Column="2"
+                                        Text="Obriši"
+                                        Style="{StaticResource DangerButton}"
+                                        Clicked="OnDeleteUserClicked" />
+                            </Grid>
+
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="Nema korisnika za dati pojam pretrage."
+                       Style="{StaticResource Caption}" Margin="0,20" HorizontalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <ActivityIndicator Grid.Row="4"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+
+    </Grid>
+
+</ContentPage>

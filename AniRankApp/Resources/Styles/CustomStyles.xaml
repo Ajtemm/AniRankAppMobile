@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- ============ DARK PALETTE (overrides / extends the template palette) ============ -->
+    <Color x:Key="PrimaryAccent">#9C86F0</Color>
+    <Color x:Key="PrimaryDark">#3A1D9E</Color>
+    <Color x:Key="PageBackground">#121216</Color>
+    <Color x:Key="CardBackground">#1C1C24</Color>
+    <Color x:Key="CardBackgroundAlt">#262631</Color>
+    <Color x:Key="TextPrimary">#ECECF1</Color>
+    <Color x:Key="TextSecondary">#9A9AA6</Color>
+    <Color x:Key="Gray300">#34343E</Color>
+    <Color x:Key="Gray400">#8A8A96</Color>
+    <Color x:Key="Gray500">#6E6E7A</Color>
+    <Color x:Key="FieldFocus">#26262F</Color>
+    <Color x:Key="ScoreHigh">#3FB950</Color>
+    <Color x:Key="ScoreMid">#E3B341</Color>
+    <Color x:Key="ScoreLow">#F85149</Color>
+
+    <!-- ============ IMPLICIT STYLE OVERRIDES ============ -->
+
+    <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{StaticResource PageBackground}" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="#FFFFFF" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="HeightRequest" Value="46" />
+        <Setter Property="Padding" Value="14,0" />
+    </Style>
+
+    <Style TargetType="Entry">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource Gray400}" />
+        <Setter Property="HeightRequest" Value="46" />
+        <!-- Property Trigger: subtle highlight while typing -->
+        <Style.Triggers>
+            <Trigger TargetType="Entry" Property="IsFocused" Value="True">
+                <Setter Property="BackgroundColor" Value="{StaticResource FieldFocus}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="Editor">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource Gray400}" />
+    </Style>
+
+    <Style TargetType="Picker">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="TitleColor" Value="{StaticResource Gray400}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="HeightRequest" Value="44" />
+    </Style>
+
+    <Style TargetType="SearchBar">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource Gray400}" />
+        <Setter Property="CancelButtonColor" Value="{StaticResource PrimaryAccent}" />
+    </Style>
+
+    <Style TargetType="ActivityIndicator">
+        <Setter Property="Color" Value="{StaticResource PrimaryAccent}" />
+    </Style>
+
+    <!-- ============ NAMED STYLES ============ -->
+
+    <Style x:Key="LinkButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
+        <Setter Property="FontAttributes" Value="None" />
+        <Setter Property="HeightRequest" Value="40" />
+    </Style>
+
+    <Style x:Key="SubtleButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
+    </Style>
+
+    <Style x:Key="DangerButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource ScoreLow}" />
+        <Setter Property="TextColor" Value="#FFFFFF" />
+        <Setter Property="HeightRequest" Value="38" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style x:Key="SectionTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <Style x:Key="Caption" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+    </Style>
+
+    <Style x:Key="Hero" TargetType="Label">
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
+    </Style>
+
+    <!-- ============ SURFACES ============ -->
+
+    <Style x:Key="FilterCardStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="Stroke" Value="{StaticResource Gray300}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="14" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="AnimeCardStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="Stroke" Value="{StaticResource Gray300}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="16" />
+        </Setter>
+        <Setter Property="Shadow">
+            <Shadow Brush="Black" Opacity="0.35" Radius="10" Offset="0,4" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="ReviewCardStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="Stroke" Value="{StaticResource Gray300}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="12" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="PosterClip" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="10" />
+        </Setter>
+    </Style>
+
+    <!-- ============ SCORE BADGE - DataTrigger changes the background colour ============
+         The badge's BindingContext must expose string "RatingTier": High / Medium / Low. -->
+
+    <Style x:Key="ScoreBadgeStyle" TargetType="Border">
+        <Setter Property="Padding" Value="8,3" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Gray500}" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="8" />
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger TargetType="Border" Binding="{Binding RatingTier}" Value="High">
+                <Setter Property="BackgroundColor" Value="{StaticResource ScoreHigh}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Border" Binding="{Binding RatingTier}" Value="Medium">
+                <Setter Property="BackgroundColor" Value="{StaticResource ScoreMid}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Border" Binding="{Binding RatingTier}" Value="Low">
+                <Setter Property="BackgroundColor" Value="{StaticResource ScoreLow}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ScoreBadgeLabelStyle" TargetType="Label">
+        <Setter Property="TextColor" Value="#FFFFFF" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Neutral pill used for the watch-status badge -->
+    <Style x:Key="StatusBadgeStyle" TargetType="Border">
+        <Setter Property="Padding" Value="8,3" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{StaticResource PrimaryAccent}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="8" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="StatusBadgeLabelStyle" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <!-- Banned-user badge -->
+    <Style x:Key="BanBadgeStyle" TargetType="Border">
+        <Setter Property="Padding" Value="8,3" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{StaticResource ScoreLow}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="8" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="BanBadgeLabelStyle" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource ScoreLow}" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="BanButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="TextColor" Value="{StaticResource ScoreMid}" />
+        <Setter Property="HeightRequest" Value="38" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Base look for a filter chip (selected state handled by VisualStateManager in the template) -->
+    <Style x:Key="FilterChipStyle" TargetType="Border">
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{StaticResource Gray300}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="16" />
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

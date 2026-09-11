@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             x:Class="AniRankApp.Views.RegisterView"
+             x:DataType="vm:RegisterViewModel"
+             Title="Registracija">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center">
+
+            <Label Text="Kreiraj nalog"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource PrimaryAccent}" />
+
+            <Entry Placeholder="Korisničko ime" Text="{Binding Username}" />
+            <Entry Placeholder="Email" Keyboard="Email" Text="{Binding Email}" />
+            <Entry Placeholder="Lozinka (min. 6 karaktera)" IsPassword="True" Text="{Binding Password}" />
+            <Entry Placeholder="Potvrdi lozinku" IsPassword="True" Text="{Binding ConfirmPassword}" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ScoreLow}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+            <Label Text="{Binding SuccessMessage}"
+                   TextColor="{StaticResource ScoreHigh}"
+                   IsVisible="{Binding SuccessMessage, Converter={StaticResource NotEmpty}}" />
+
+            <Button Text="Registruj se"
+                    Command="{Binding RegisterCommand}"
+                    IsEnabled="{Binding IsNotBusy}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Button Text="Već imaš nalog? Prijavi se"
+                    Style="{StaticResource LinkButton}"
+                    Command="{Binding GoToLoginCommand}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

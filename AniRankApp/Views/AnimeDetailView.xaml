@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:model="clr-namespace:AniRankApp.Models"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
+             x:Class="AniRankApp.Views.AnimeDetailView"
+             x:DataType="vm:AnimeDetailViewModel"
+             Title="{Binding Title}">
+
+    <Grid>
+
+        <CollectionView ItemsSource="{Binding Reviews}">
+
+            <!-- ================= HEADER: details + review form ================= -->
+            <CollectionView.Header>
+                <ContentView>
+                    <VerticalStackLayout x:DataType="vm:AnimeDetailViewModel" Padding="14" Spacing="12">
+
+                        <Border Style="{StaticResource PosterClip}">
+                            <Image Source="{Binding Anime.CoverUrl}"
+                                   Aspect="AspectFill"
+                                   HeightRequest="160" />
+                        </Border>
+
+                        <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                            <Border Grid.Column="0" Style="{StaticResource PosterClip}">
+                                <Image Source="{Binding Anime.PosterUrl}"
+                                       Aspect="AspectFill"
+                                       HeightRequest="150"
+                                       WidthRequest="110" />
+                            </Border>
+
+                            <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                <Label Text="{Binding Anime.Title}" Style="{StaticResource SectionTitle}" />
+                                <Label Text="{Binding Anime.StatusText}" Style="{StaticResource Caption}" />
+                                <Label Text="{Binding Anime.EpisodeText}" Style="{StaticResource Caption}" />
+                                <Label Text="{Binding Anime.PopularityText}" Style="{StaticResource Caption}" />
+
+                                <Border Style="{StaticResource ScoreBadgeStyle}"
+                                        BindingContext="{Binding Anime}">
+                                    <Label x:DataType="model:Anime"
+                                           Style="{StaticResource ScoreBadgeLabelStyle}"
+                                           Text="{Binding AverageRatingText, StringFormat='Kitsu ocena: {0}'}" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Label Text="Opis" Style="{StaticResource SectionTitle}" />
+                        <Label Text="{Binding Anime.Synopsis}" />
+
+                        <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
+
+                        <!-- ============ MY LIST / REVIEW FORM ============ -->
+                        <Label Text="Moja lista i recenzija" Style="{StaticResource SectionTitle}" />
+
+                        <Label Text="Status gledanja" Style="{StaticResource Caption}" />
+                        <Picker Title="Izaberi status"
+                                ItemsSource="{Binding Statuses}"
+                                SelectedItem="{Binding SelectedStatus}" />
+
+                        <VerticalStackLayout Spacing="8" IsVisible="{Binding CanRate}">
+                            <Label Text="{Binding NewRating, StringFormat='Ocena: {0:0.0} / 10'}" />
+                            <Slider Minimum="1" Maximum="10" Value="{Binding NewRating}" />
+                            <controls:RatingBar RatingValue="{Binding NewRating}" MaxRating="10" ShowStars="True" />
+                        </VerticalStackLayout>
+
+                        <Label Text="Za status „Plan to Watch“ i „Dropped“ ocena se ne upisuje."
+                               Style="{StaticResource Caption}"
+                               IsVisible="{Binding CanRate, Converter={StaticResource Invert}}" />
+
+                        <Editor Placeholder="Komentar (opciono)..."
+                                Text="{Binding NewComment}"
+                                AutoSize="TextChanges"
+                                HeightRequest="90" />
+
+                        <Label Text="{Binding ErrorMessage}"
+                               TextColor="{StaticResource ScoreLow}"
+                               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+                        <Button Text="{Binding SubmitButtonText}"
+                                Command="{Binding SubmitReviewCommand}"
+                                IsEnabled="{Binding IsNotBusy}" />
+
+                        <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
+
+                        <Label Text="Recenzije korisnika" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Još uvek nema recenzija za ovaj anime."
+                               Style="{StaticResource Caption}"
+                               IsVisible="{Binding HasNoReviews}" />
+                    </VerticalStackLayout>
+                </ContentView>
+            </CollectionView.Header>
+
+            <!-- ================= REVIEW ITEM ================= -->
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="model:Review">
+                    <Border Style="{StaticResource ReviewCardStyle}" Margin="14,0,14,10">
+                        <VerticalStackLayout Spacing="6">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="{Binding Username}" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="{Binding CreatedAtText}" Style="{StaticResource Caption}" />
+                            </Grid>
+
+                            <HorizontalStackLayout Spacing="8">
+                                <Border Style="{StaticResource ScoreBadgeStyle}" IsVisible="{Binding HasRating}">
+                                    <Label Style="{StaticResource ScoreBadgeLabelStyle}"
+                                           Text="{Binding Rating, StringFormat='Ocena: {0:0.0}/10'}" />
+                                </Border>
+                                <Border Style="{StaticResource StatusBadgeStyle}">
+                                    <Label Style="{StaticResource StatusBadgeLabelStyle}"
+                                           Text="{Binding StatusDisplay}" />
+                                </Border>
+                            </HorizontalStackLayout>
+
+                            <Label Text="{Binding Comment}"
+                                   IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             x:Class="AniRankApp.Views.LoginView"
+             x:DataType="vm:LoginViewModel"
+             Title="Prijava">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center">
+
+            <Label Text="AniRank"
+                   FontSize="40"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource PrimaryAccent}" />
+
+            <Label Text="Prijavi se na svoj nalog"
+                   HorizontalOptions="Center"
+                   Style="{StaticResource Caption}" />
+
+            <Entry Placeholder="Korisničko ime"
+                   Text="{Binding Username}"
+                   ReturnType="Next" />
+
+            <Entry Placeholder="Lozinka"
+                   IsPassword="True"
+                   Text="{Binding Password}"
+                   ReturnType="Done" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ScoreLow}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+            <Button Text="Prijava"
+                    Command="{Binding LoginCommand}"
+                    IsEnabled="{Binding IsNotBusy}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Button Text="Nemaš nalog? Registruj se"
+                    Style="{StaticResource LinkButton}"
+                    Command="{Binding GoToRegisterCommand}" />
+
+            <Label Text="Demo admin nalog:  admin  /  admin123"
+                   FontSize="11"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Gray400}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

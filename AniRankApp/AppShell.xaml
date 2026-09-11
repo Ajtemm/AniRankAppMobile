@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:AniRankApp.Views"
+       x:Class="AniRankApp.AppShell"
+       Shell.FlyoutBehavior="Disabled"
+       Shell.BackgroundColor="{StaticResource PageBackground}"
+       Shell.ForegroundColor="{StaticResource TextPrimary}"
+       Shell.TitleColor="{StaticResource TextPrimary}"
+       Shell.TabBarBackgroundColor="{StaticResource CardBackground}"
+       Shell.TabBarTitleColor="{StaticResource PrimaryAccent}"
+       Shell.TabBarUnselectedColor="{StaticResource Gray500}"
+       Title="AniRankApp">
+
+    <!-- ============ AUTH (not part of the tab bar) ============ -->
+    <ShellContent x:Name="LoginItem"
+                  Route="login"
+                  ContentTemplate="{DataTemplate views:LoginView}" />
+
+    <ShellContent x:Name="RegisterItem"
+                  Route="register"
+                  ContentTemplate="{DataTemplate views:RegisterView}" />
+
+    <!-- ============ MAIN TABBED NAVIGATION ============ -->
+    <TabBar x:Name="MainTab" Route="main">
+
+        <Tab Title="Istraži">
+            <ShellContent Route="explore"
+                          ContentTemplate="{DataTemplate views:ExploreView}" />
+        </Tab>
+
+        <Tab Title="Recenzije">
+            <ShellContent Route="myreviews"
+                          ContentTemplate="{DataTemplate views:MyReviewsView}" />
+        </Tab>
+
+        <Tab Title="Profil">
+            <ShellContent Route="profile"
+                          ContentTemplate="{DataTemplate views:ProfileView}" />
+        </Tab>
+
+        <!-- Visible only for the Admin role -->
+        <Tab x:Name="AdminTab" Title="Admin" IsVisible="{Binding IsAdmin}">
+            <ShellContent Route="admin"
+                          ContentTemplate="{DataTemplate views:AdminView}" />
+        </Tab>
+
+    </TabBar>
+
+</Shell>

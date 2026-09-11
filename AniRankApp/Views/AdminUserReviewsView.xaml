@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:model="clr-namespace:AniRankApp.Models"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
+             x:Class="AniRankApp.Views.AdminUserReviewsView"
+             x:DataType="vm:AdminUserReviewsViewModel"
+             Title="{Binding Title}">
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="12,10" RowSpacing="8">
+
+        <Label Grid.Row="0" Text="{Binding HeaderText}" Style="{StaticResource SectionTitle}" />
+
+        <Label Grid.Row="1"
+               Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource ScoreLow}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Reviews}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="model:Review">
+                    <Border Style="{StaticResource ReviewCardStyle}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                                <Label Text="{Binding AnimeTitle}" FontAttributes="Bold" />
+                                <Label Text="{Binding Username, StringFormat='Autor: {0}'}" Style="{StaticResource Caption}" />
+
+                                <HorizontalStackLayout Spacing="8">
+                                    <Border Style="{StaticResource ScoreBadgeStyle}" IsVisible="{Binding HasRating}">
+                                        <Label Style="{StaticResource ScoreBadgeLabelStyle}"
+                                               Text="{Binding Rating, StringFormat='Ocena: {0:0.0}/10'}" />
+                                    </Border>
+                                    <Border Style="{StaticResource StatusBadgeStyle}">
+                                        <Label Style="{StaticResource StatusBadgeLabelStyle}"
+                                               Text="{Binding StatusDisplay}" />
+                                    </Border>
+                                </HorizontalStackLayout>
+
+                                <Label Text="{Binding Comment}"
+                                       MaxLines="3"
+                                       LineBreakMode="TailTruncation"
+                                       IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
+                                <Label Text="{Binding CreatedAtText}" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+
+                            <Button Grid.Column="1"
+                                    Text="Obriši"
+                                    Style="{StaticResource DangerButton}"
+                                    VerticalOptions="Center"
+                                    Clicked="OnDeleteReviewClicked" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="Nema recenzija."
+                       Style="{StaticResource Caption}" Margin="0,30" HorizontalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <ActivityIndicator Grid.Row="2"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+
+    </Grid>
+
+</ContentPage>

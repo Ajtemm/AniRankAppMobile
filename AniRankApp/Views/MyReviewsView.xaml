@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:model="clr-namespace:AniRankApp.Models"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
+             x:Class="AniRankApp.Views.MyReviewsView"
+             x:DataType="vm:MyReviewsViewModel"
+             Title="Moje Recenzije">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+
+        <!-- ===== Status filter chips ===== -->
+        <CollectionView Grid.Row="0"
+                        HeightRequest="46"
+                        ItemsSource="{Binding StatusFilters}"
+                        SelectedItem="{Binding SelectedStatusFilter}"
+                        SelectionMode="Single">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="sys:String">
+                    <Border Style="{StaticResource FilterChipStyle}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="Selected">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="Stroke" Value="{StaticResource Primary}" />
+                                        <Setter TargetName="ChipLabel" Property="Label.TextColor" Value="#FFFFFF" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Label x:Name="ChipLabel"
+                               Text="{Binding .}"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center" />
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Label Grid.Row="1"
+               Text="{Binding Summary}"
+               Style="{StaticResource Caption}"
+               IsVisible="{Binding Summary, Converter={StaticResource NotEmpty}}" />
+
+        <Label Grid.Row="2"
+               Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource ScoreLow}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+        <RefreshView Grid.Row="3"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding LoadCommand}">
+
+            <CollectionView ItemsSource="{Binding Reviews}">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:Review">
+                        <Border Style="{StaticResource ReviewCardStyle}">
+                            <Grid ColumnDefinitions="80,*,Auto" ColumnSpacing="10">
+
+                                <Border Grid.Column="0" Style="{StaticResource PosterClip}">
+                                    <Image Source="{Binding AnimeImageUrl}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="104"
+                                           WidthRequest="80" />
+                                </Border>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                    <Label Text="{Binding AnimeTitle}" FontAttributes="Bold" FontSize="15" />
+
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Border Style="{StaticResource StatusBadgeStyle}">
+                                            <Label Style="{StaticResource StatusBadgeLabelStyle}"
+                                                   Text="{Binding StatusDisplay}" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+
+                                    <controls:RatingBar RatingValue="{Binding Rating}" MaxRating="10" ShowStars="True"
+                                                        IsVisible="{Binding HasRating}" />
+                                    <Label Text="Bez ocene"
+                                           Style="{StaticResource Caption}"
+                                           IsVisible="{Binding HasRating, Converter={StaticResource Invert}}" />
+                                    <Label Text="{Binding Comment}"
+                                           MaxLines="3"
+                                           LineBreakMode="TailTruncation"
+                                           IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
+                                    <Label Text="{Binding CreatedAtText}" Style="{StaticResource Caption}" />
+                                </VerticalStackLayout>
+
+                                <Button Grid.Column="2"
+                                        Text="Obriši"
+                                        Style="{StaticResource DangerButton}"
+                                        VerticalOptions="Center"
+                                        Clicked="OnDeleteClicked" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <Label Text="Nema recenzija za izabrani filter."
+                           HorizontalOptions="Center"
+                           Margin="0,40"
+                           Style="{StaticResource Caption}" />
+                </CollectionView.EmptyView>
+
+            </CollectionView>
+        </RefreshView>
+
+    </Grid>
+
+</ContentPage>
