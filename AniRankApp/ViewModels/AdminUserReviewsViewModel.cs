@@ -60,14 +60,15 @@ public partial class AdminUserReviewsViewModel : BaseViewModel, IQueryAttributab
                 Title = user?.Username ?? "Recenzije";
             }
 
+            // One username lookup for the whole list instead of one query per review.
+            var usernames = list.Count > 0 ? await _db.GetUsernamesAsync() : new Dictionary<int, string>();
+
             Reviews.Clear();
             foreach (var r in list)
             {
                 if (string.IsNullOrEmpty(r.Username))
-                {
-                    var author = await _db.GetUserByIdAsync(r.UserId);
-                    r.Username = author?.Username ?? "Nepoznat";
-                }
+                    r.Username = usernames.GetValueOrDefault(r.UserId) ?? "Nepoznat";
+
                 Reviews.Add(r);
             }
 

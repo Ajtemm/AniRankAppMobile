@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
              x:Class="AniRankApp.Views.LoginView"
              x:DataType="vm:LoginViewModel"
+             Shell.FlyoutBehavior="Disabled"
              Title="Prijava">
 
     <ScrollView>

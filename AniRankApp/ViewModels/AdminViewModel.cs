@@ -26,6 +26,13 @@ public partial class AdminViewModel : BaseViewModel
 
     partial void OnUserSearchChanged(string value) => ApplyUserFilter();
 
+    // ---- Manual "add user" form ----
+    [ObservableProperty] private string newUsername = string.Empty;
+    [ObservableProperty] private string newEmail = string.Empty;
+    [ObservableProperty] private string newPassword = string.Empty;
+    [ObservableProperty] private bool newUserIsAdmin;
+    [ObservableProperty] private string? addUserMessage;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -66,6 +73,41 @@ public partial class AdminViewModel : BaseViewModel
         Users.Clear();
         foreach (var u in query)
             Users.Add(u);
+    }
+
+    /// <summary>Lets an admin create a user account by hand, optionally as another Admin.</summary>
+    [RelayCommand]
+    private async Task AddUserAsync()
+    {
+        if (IsBusy) return;
+
+        ErrorMessage = null;
+        AddUserMessage = null;
+
+        try
+        {
+            IsBusy = true;
+            var role = NewUserIsAdmin ? "Admin" : "User";
+            var (ok, error) = await _auth.RegisterAsync(NewUsername, NewEmail, NewPassword, role);
+            if (!ok)
+            {
+                ErrorMessage = error;
+                return;
+            }
+
+            AddUserMessage = $"Korisnik \"{NewUsername.Trim()}\" je uspešno dodat.";
+            NewUsername = NewEmail = NewPassword = string.Empty;
+            NewUserIsAdmin = false;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Greška pri dodavanju korisnika: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     /// <summary>Open one user's reviews on a dedicated page.</summary>

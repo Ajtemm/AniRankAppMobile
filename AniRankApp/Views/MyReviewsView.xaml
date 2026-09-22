@@ -7,12 +7,14 @@
              xmlns:controls="clr-namespace:AniRankApp.Controls"
              x:Class="AniRankApp.Views.MyReviewsView"
              x:DataType="vm:MyReviewsViewModel"
-             Title="Moje Recenzije">
+             Title="{Binding Title}">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+
+        <Label Grid.Row="0" Text="{Binding HeaderText}" Style="{StaticResource SectionTitle}" />
 
         <!-- ===== Status filter chips ===== -->
-        <CollectionView Grid.Row="0"
+        <CollectionView Grid.Row="1"
                         HeightRequest="46"
                         ItemsSource="{Binding StatusFilters}"
                         SelectedItem="{Binding SelectedStatusFilter}"
@@ -47,17 +49,28 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Label Grid.Row="1"
+        <Picker Grid.Row="2"
+                Title="Sortiranje"
+                ItemsSource="{Binding SortOptions}"
+                SelectedIndex="{Binding SelectedSortIndex}" />
+
+        <Label Grid.Row="3"
                Text="{Binding Summary}"
                Style="{StaticResource Caption}"
                IsVisible="{Binding Summary, Converter={StaticResource NotEmpty}}" />
 
-        <Label Grid.Row="2"
-               Text="{Binding ErrorMessage}"
-               TextColor="{StaticResource ScoreLow}"
-               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+        <VerticalStackLayout Grid.Row="4" Spacing="4">
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ScoreLow}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
 
-        <RefreshView Grid.Row="3"
+            <Border Style="{StaticResource FilterCardStyle}"
+                    IsVisible="{Binding PrivacyNotice, Converter={StaticResource NotEmpty}}">
+                <Label Text="{Binding PrivacyNotice}" />
+            </Border>
+        </VerticalStackLayout>
+
+        <RefreshView Grid.Row="5"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding LoadCommand}">
 
@@ -65,45 +78,63 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="model:Review">
-                        <Border Style="{StaticResource ReviewCardStyle}">
-                            <Grid ColumnDefinitions="80,*,Auto" ColumnSpacing="10">
 
-                                <Border Grid.Column="0" Style="{StaticResource PosterClip}">
-                                    <Image Source="{Binding AnimeImageUrl}"
-                                           Aspect="AspectFill"
-                                           HeightRequest="104"
-                                           WidthRequest="80" />
-                                </Border>
+                        <!-- Swipe left to delete; disabled on someone else's list -->
+                        <SwipeView IsEnabled="{Binding Source={RelativeSource AncestorType={x:Type vm:MyReviewsViewModel}}, Path=CanDelete}">
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Execute">
+                                    <SwipeItem Text="Obriši"
+                                               BackgroundColor="{StaticResource ScoreLow}"
+                                               Invoked="OnDeleteSwiped" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
 
-                                <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
-                                    <Label Text="{Binding AnimeTitle}" FontAttributes="Bold" FontSize="15" />
+                            <Border Style="{StaticResource ReviewCardStyle}">
+                                <Grid ColumnDefinitions="80,*,Auto" ColumnSpacing="10">
 
-                                    <HorizontalStackLayout Spacing="8">
-                                        <Border Style="{StaticResource StatusBadgeStyle}">
-                                            <Label Style="{StaticResource StatusBadgeLabelStyle}"
-                                                   Text="{Binding StatusDisplay}" />
-                                        </Border>
-                                    </HorizontalStackLayout>
+                                    <Border Grid.Column="0" Style="{StaticResource PosterClip}">
+                                        <Image Source="{Binding AnimeImageUrl}"
+                                               Aspect="AspectFill"
+                                               HeightRequest="104"
+                                               WidthRequest="80" />
+                                    </Border>
 
-                                    <controls:RatingBar RatingValue="{Binding Rating}" MaxRating="10" ShowStars="True"
-                                                        IsVisible="{Binding HasRating}" />
-                                    <Label Text="Bez ocene"
-                                           Style="{StaticResource Caption}"
-                                           IsVisible="{Binding HasRating, Converter={StaticResource Invert}}" />
-                                    <Label Text="{Binding Comment}"
-                                           MaxLines="3"
-                                           LineBreakMode="TailTruncation"
-                                           IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
-                                    <Label Text="{Binding CreatedAtText}" Style="{StaticResource Caption}" />
-                                </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                        <Label Text="{Binding AnimeTitle}" FontAttributes="Bold" FontSize="15" />
 
-                                <Button Grid.Column="2"
-                                        Text="Obriši"
-                                        Style="{StaticResource DangerButton}"
-                                        VerticalOptions="Center"
-                                        Clicked="OnDeleteClicked" />
-                            </Grid>
-                        </Border>
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Border Style="{StaticResource StatusBadgeStyle}">
+                                                <Label Style="{StaticResource StatusBadgeLabelStyle}"
+                                                       Text="{Binding StatusDisplay}" />
+                                            </Border>
+                                            <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding HasProgress}">
+                                                <Label Style="{StaticResource StatusBadgeLabelStyle}"
+                                                       Text="{Binding ProgressText}" />
+                                            </Border>
+                                        </HorizontalStackLayout>
+
+                                        <controls:RatingBar RatingValue="{Binding Rating}" MaxRating="10" ShowStars="True"
+                                                            IsVisible="{Binding HasRating}" />
+                                        <Label Text="Bez ocene"
+                                               Style="{StaticResource Caption}"
+                                               IsVisible="{Binding HasRating, Converter={StaticResource Invert}}" />
+                                        <Label Text="{Binding Comment}"
+                                               MaxLines="3"
+                                               LineBreakMode="TailTruncation"
+                                               IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
+                                        <Label Text="{Binding LastActivityText}" Style="{StaticResource Caption}" />
+                                    </VerticalStackLayout>
+
+                                    <Button Grid.Column="2"
+                                            Text="Obriši"
+                                            Style="{StaticResource DangerButton}"
+                                            VerticalOptions="Center"
+                                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:MyReviewsViewModel}}, Path=CanDelete}"
+                                            Clicked="OnDeleteClicked" />
+                                </Grid>
+                            </Border>
+                        </SwipeView>
+
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 

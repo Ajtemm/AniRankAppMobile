@@ -11,7 +11,17 @@ namespace AniRankApp.Services;
 /// </summary>
 public class KitsuApiService
 {
+    /// <summary>How many anime details we keep in memory (oldest entry is dropped).</summary>
+    private const int DetailCacheSize = 50;
+
     private readonly HttpClient _http;
+
+    /// <summary>
+    /// Details of already opened anime. Re-opening the same anime (list -&gt; detail -&gt;
+    /// back -&gt; detail) then costs no HTTP request at all.
+    /// </summary>
+    private readonly Dictionary<string, Anime> _detailCache = new();
+    private readonly Queue<string> _detailCacheOrder = new();
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -75,10 +85,26 @@ public class KitsuApiService
         return resp?.Data.Select(Anime.FromKitsu).ToList() ?? new List<Anime>();
     }
 
-    /// <summary>GET https://kitsu.io/api/edge/anime/{id}</summary>
+    /// <summary>GET https://kitsu.io/api/edge/anime/{id} (served from the in-memory cache when possible).</summary>
     public async Task<Anime?> GetAnimeDetailsAsync(string id, CancellationToken ct = default)
     {
+        if (_detailCache.TryGetValue(id, out var cached))
+            return cached;
+
         var resp = await _http.GetFromJsonAsync<KitsuAnimeSingleResponse>($"anime/{id}", JsonOptions, ct);
-        return resp?.Data is null ? null : Anime.FromKitsu(resp.Data);
+        if (resp?.Data is null) return null;
+
+        var anime = Anime.FromKitsu(resp.Data);
+        CacheDetail(id, anime);
+        return anime;
+    }
+
+    private void CacheDetail(string id, Anime anime)
+    {
+        if (!_detailCache.TryAdd(id, anime)) return;
+
+        _detailCacheOrder.Enqueue(id);
+        while (_detailCacheOrder.Count > DetailCacheSize)
+            _detailCache.Remove(_detailCacheOrder.Dequeue());
     }
 }

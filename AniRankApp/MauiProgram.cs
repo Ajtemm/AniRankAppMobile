@@ -21,7 +21,6 @@ public static class MauiProgram
         // ---- Services (singletons: shared for the whole app lifetime) ----
         builder.Services.AddSingleton<DatabaseService>();
         builder.Services.AddSingleton<AuthService>();
-        builder.Services.AddSingleton<FileExportService>();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton<KitsuApiService>();
 
@@ -35,6 +34,9 @@ public static class MauiProgram
         builder.Services.AddTransient<AnimeDetailViewModel>();
         builder.Services.AddTransient<MyReviewsViewModel>();
         builder.Services.AddTransient<ProfileViewModel>();
+        builder.Services.AddTransient<CommunityViewModel>();
+        builder.Services.AddTransient<UserProfileViewModel>();
+        builder.Services.AddTransient<TopListViewModel>();
         builder.Services.AddTransient<AdminViewModel>();
         builder.Services.AddTransient<AdminUserReviewsViewModel>();
 
@@ -45,6 +47,9 @@ public static class MauiProgram
         builder.Services.AddTransient<AnimeDetailView>();
         builder.Services.AddTransient<MyReviewsView>();
         builder.Services.AddTransient<ProfileView>();
+        builder.Services.AddTransient<CommunityView>();
+        builder.Services.AddTransient<UserProfileView>();
+        builder.Services.AddTransient<TopListView>();
         builder.Services.AddTransient<AdminView>();
         builder.Services.AddTransient<AdminUserReviewsView>();
 

@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Assignment target: an Android app. Keep this single-target for fast builds.
-		     Add ;net10.0-ios;net10.0-windows10.0.19041.0 back if you want to run on other platforms. -->
-		<TargetFrameworks>net10.0-android</TargetFrameworks>
+		<!-- Assignment target: an Android app. Windows is enabled too so it can run/debug on a plain PC.
+		     Add ;net10.0-ios back if you also want iOS. -->
+		<TargetFrameworks>net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>AniRankApp</RootNamespace>
@@ -25,6 +25,16 @@
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+		<!-- Avoids "Class not registered (0x80040154)" when running unpackaged: bundle the Windows App SDK
+		     runtime instead of relying on framework packages being registered system-wide. -->
+		<WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<!-- Fast Deployment fails on some physical devices (XA0129); embed assemblies instead. -->
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -51,8 +61,8 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
-		<!-- Pull the patched native SQLite binary (fixes advisory GHSA-2m69-gcr7-jv3q). -->
-		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.android" Version="2.1.13" />
+		<!-- Pull the patched native SQLite binary (fixes advisory GHSA-2m69-gcr7-jv3q). Android-only native asset. -->
+		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.android" Version="2.1.13" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" />
 	</ItemGroup>
 
 </Project>

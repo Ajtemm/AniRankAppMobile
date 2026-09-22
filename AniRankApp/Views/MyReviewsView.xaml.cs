@@ -27,4 +27,11 @@ public partial class MyReviewsView : ContentPage
         if (sender is Button { BindingContext: Review review })
             _vm.DeleteReviewCommand.Execute(review);
     }
+
+    /// <summary>Swipe-to-delete; the command itself ignores other people's lists.</summary>
+    private void OnDeleteSwiped(object? sender, EventArgs e)
+    {
+        if (sender is SwipeItem { BindingContext: Review review })
+            _vm.DeleteReviewCommand.Execute(review);
+    }
 }

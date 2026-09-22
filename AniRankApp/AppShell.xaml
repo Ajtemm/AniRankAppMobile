@@ -3,48 +3,77 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:AniRankApp.Views"
        x:Class="AniRankApp.AppShell"
-       Shell.FlyoutBehavior="Disabled"
+       Shell.FlyoutBehavior="Flyout"
+       Shell.FlyoutBackgroundColor="{StaticResource CardBackground}"
+       Shell.FlyoutWidth="270"
        Shell.BackgroundColor="{StaticResource PageBackground}"
        Shell.ForegroundColor="{StaticResource TextPrimary}"
        Shell.TitleColor="{StaticResource TextPrimary}"
-       Shell.TabBarBackgroundColor="{StaticResource CardBackground}"
-       Shell.TabBarTitleColor="{StaticResource PrimaryAccent}"
-       Shell.TabBarUnselectedColor="{StaticResource Gray500}"
        Title="AniRankApp">
 
-    <!-- ============ AUTH (not part of the tab bar) ============ -->
+    <!-- ============ SIDEBAR HEADER: branding + logged-in user ============ -->
+    <Shell.FlyoutHeader>
+        <VerticalStackLayout Padding="24,56,24,22"
+                              Spacing="4"
+                              BackgroundColor="{StaticResource PageBackground}">
+            <Label Text="AniRank"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource PrimaryAccent}" />
+            <Label Text="{Binding CurrentUsername}"
+                   FontSize="15"
+                   TextColor="{StaticResource TextPrimary}"
+                   IsVisible="{Binding IsLoggedIn}" />
+            <Label Text="{Binding CurrentRoleLabel}"
+                   Style="{StaticResource Caption}"
+                   IsVisible="{Binding IsLoggedIn}" />
+        </VerticalStackLayout>
+    </Shell.FlyoutHeader>
+
+    <!-- ============ AUTH (hidden from the sidebar) ============ -->
     <ShellContent x:Name="LoginItem"
                   Route="login"
+                  FlyoutItemIsVisible="False"
                   ContentTemplate="{DataTemplate views:LoginView}" />
 
     <ShellContent x:Name="RegisterItem"
                   Route="register"
+                  FlyoutItemIsVisible="False"
                   ContentTemplate="{DataTemplate views:RegisterView}" />
 
-    <!-- ============ MAIN TABBED NAVIGATION ============ -->
-    <TabBar x:Name="MainTab" Route="main">
+    <!-- ============ MAIN SIDEBAR NAVIGATION ============ -->
+    <FlyoutItem x:Name="ExploreItem" Title="🔍  Istraži" Route="explore">
+        <ShellContent ContentTemplate="{DataTemplate views:ExploreView}" />
+    </FlyoutItem>
 
-        <Tab Title="Istraži">
-            <ShellContent Route="explore"
-                          ContentTemplate="{DataTemplate views:ExploreView}" />
-        </Tab>
+    <FlyoutItem x:Name="CommunityTab" Title="👥  Zajednica" Route="community">
+        <ShellContent ContentTemplate="{DataTemplate views:CommunityView}" />
+    </FlyoutItem>
 
-        <Tab Title="Recenzije">
-            <ShellContent Route="myreviews"
-                          ContentTemplate="{DataTemplate views:MyReviewsView}" />
-        </Tab>
+    <FlyoutItem Title="👤  Profil" Route="profile">
+        <ShellContent ContentTemplate="{DataTemplate views:ProfileView}" />
+    </FlyoutItem>
 
-        <Tab Title="Profil">
-            <ShellContent Route="profile"
-                          ContentTemplate="{DataTemplate views:ProfileView}" />
-        </Tab>
+    <!-- Visible only for the Admin role -->
+    <FlyoutItem x:Name="AdminTab" Title="🛠  Admin" Route="admin" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate views:AdminView}" />
+    </FlyoutItem>
 
-        <!-- Visible only for the Admin role -->
-        <Tab x:Name="AdminTab" Title="Admin" IsVisible="{Binding IsAdmin}">
-            <ShellContent Route="admin"
-                          ContentTemplate="{DataTemplate views:AdminView}" />
-        </Tab>
-
-    </TabBar>
+    <!-- ============ SIDEBAR FOOTER: quick actions ============ -->
+    <Shell.FlyoutFooter>
+        <VerticalStackLayout Padding="16,10,16,24"
+                              Spacing="10"
+                              BackgroundColor="{StaticResource PageBackground}">
+            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,0,0,4" />
+            <Button Text="🏆  Top lista"
+                    Style="{StaticResource SubtleButton}"
+                    Clicked="OnTopListClicked" />
+            <Button Text="Odjava"
+                    Style="{StaticResource DangerButton}"
+                    HeightRequest="44"
+                    IsVisible="{Binding IsLoggedIn}"
+                    Clicked="OnLogoutClicked" />
+        </VerticalStackLayout>
+    </Shell.FlyoutFooter>
 
 </Shell>

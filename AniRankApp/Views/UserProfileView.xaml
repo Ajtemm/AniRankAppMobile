@@ -2,25 +2,38 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
-             x:Class="AniRankApp.Views.ProfileView"
-             x:DataType="vm:ProfileViewModel"
-             Title="Profil">
+             x:Class="AniRankApp.Views.UserProfileView"
+             x:DataType="vm:UserProfileViewModel"
+             Title="{Binding Title}">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="16">
 
             <Border Style="{StaticResource ReviewCardStyle}">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Prijavljeni korisnik" Style="{StaticResource Caption}" />
+                    <Label Text="Korisnik" Style="{StaticResource Caption}" />
                     <Label Text="{Binding Username}" FontSize="22" FontAttributes="Bold" />
 
                     <Label Text="{Binding Role, StringFormat='Uloga: {0}'}" />
-                    <Label Text="{Binding LoginInfo}" Style="{StaticResource Caption}" />
+                    <Label Text="{Binding JoinedText}" Style="{StaticResource Caption}" />
 
                     <HorizontalStackLayout Spacing="16">
                         <Label Text="{Binding FollowerCount, StringFormat='Pratilaca: {0}'}" />
-                        <Label Text="{Binding FollowingCount, StringFormat='Pratim: {0}'}" />
+                        <Label Text="{Binding FollowingCount, StringFormat='Prati: {0}'}" />
                     </HorizontalStackLayout>
+
+                    <HorizontalStackLayout Spacing="6">
+                        <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding FollowsMe}">
+                            <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="Prati te" />
+                        </Border>
+                        <Border Style="{StaticResource BanBadgeStyle}" IsVisible="{Binding IsPrivateProfile}">
+                            <Label Style="{StaticResource BanBadgeLabelStyle}" Text="Privatan profil" />
+                        </Border>
+                    </HorizontalStackLayout>
+
+                    <Button Text="{Binding FollowActionText}"
+                            IsVisible="{Binding IsSelf, Converter={StaticResource Invert}}"
+                            Command="{Binding ToggleFollowCommand}" />
                 </VerticalStackLayout>
             </Border>
 
@@ -28,24 +41,22 @@
                    TextColor="{StaticResource ScoreLow}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
 
-            <!-- ===== Privacy ===== -->
-            <Label Text="Privatnost" Style="{StaticResource SectionTitle}" />
-            <Border Style="{StaticResource ReviewCardStyle}">
-                <VerticalStackLayout Spacing="6">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Grid.Column="0" Text="Privatan profil" VerticalOptions="Center" />
-                        <Switch Grid.Column="1" IsToggled="{Binding IsPrivate}" />
-                    </Grid>
-                    <Label Text="{Binding PrivacyHint}" Style="{StaticResource Caption}" />
-                </VerticalStackLayout>
+            <!-- ===== Private profile: nothing below is shown without permission ===== -->
+            <Border Style="{StaticResource FilterCardStyle}"
+                    IsVisible="{Binding CanSeeList, Converter={StaticResource Invert}}">
+                <Label Text="{Binding PrivacyNotice}" />
             </Border>
 
             <!-- ===== Watch-status breakdown - tap a row to see those reviews ===== -->
-            <Label Text="Moja lista po statusu" Style="{StaticResource SectionTitle}" />
-            <Label Text="Dodirni status da vidiš recenzije koje su sa ovog profila."
-                   Style="{StaticResource Caption}" />
+            <Label Text="Lista po statusu"
+                   Style="{StaticResource SectionTitle}"
+                   IsVisible="{Binding CanSeeList}" />
+            <Label Text="Dodirni status da vidiš recenzije sa ovog profila."
+                   Style="{StaticResource Caption}"
+                   IsVisible="{Binding CanSeeList}" />
 
-            <Border Style="{StaticResource ReviewCardStyle}">
+            <Border Style="{StaticResource ReviewCardStyle}"
+                    IsVisible="{Binding CanSeeList}">
                 <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding StatusBreakdown}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:StatusCountItem">
@@ -71,17 +82,12 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Button Text="{Binding ReviewCount, StringFormat='Sve moje recenzije ({0})'}"
+            <Button Text="{Binding ReviewCount, StringFormat='Sve recenzije ({0})'}"
                     Style="{StaticResource SubtleButton}"
+                    IsVisible="{Binding CanSeeList}"
                     Command="{Binding OpenAllReviewsCommand}" />
 
-            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
-
-            <Button Text="Odjava"
-                    Style="{StaticResource DangerButton}"
-                    HeightRequest="46"
-                    FontSize="14"
-                    Command="{Binding LogoutCommand}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
 
         </VerticalStackLayout>
     </ScrollView>

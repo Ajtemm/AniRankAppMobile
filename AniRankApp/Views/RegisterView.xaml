@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
              x:Class="AniRankApp.Views.RegisterView"
              x:DataType="vm:RegisterViewModel"
+             Shell.FlyoutBehavior="Disabled"
              Title="Registracija">
 
     <ScrollView>

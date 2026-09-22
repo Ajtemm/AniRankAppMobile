@@ -59,6 +59,13 @@
                 </VerticalStackLayout>
             </Border>
 
+            <Border Style="{StaticResource FilterCardStyle}"
+                    IsVisible="{Binding IsOffline}">
+                <Label Text="{Binding OfflineNotice}"
+                       TextColor="{StaticResource ScoreMid}"
+                       FontSize="12" />
+            </Border>
+
             <Label Text="{Binding ErrorMessage}"
                    Margin="2,0"
                    TextColor="{StaticResource ScoreLow}"

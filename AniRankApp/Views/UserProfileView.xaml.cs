@@ -3,22 +3,16 @@ using AniRankApp.ViewModels;
 
 namespace AniRankApp.Views;
 
-public partial class ProfileView : ContentPage
+public partial class UserProfileView : ContentPage
 {
-    private readonly ProfileViewModel _vm;
+    private readonly UserProfileViewModel _vm;
 
-    public ProfileView() : this(ServiceHelper.GetService<ProfileViewModel>()) { }
+    public UserProfileView() : this(ServiceHelper.GetService<UserProfileViewModel>()) { }
 
-    public ProfileView(ProfileViewModel vm)
+    public UserProfileView(UserProfileViewModel vm)
     {
         InitializeComponent();
         BindingContext = _vm = vm;
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        await _vm.LoadAsync();
     }
 
     private void OnStatusTapped(object? sender, TappedEventArgs e)

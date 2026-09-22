@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:model="clr-namespace:AniRankApp.Models"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
+             x:Class="AniRankApp.Views.TopListView"
+             x:DataType="vm:TopListViewModel"
+             Title="Top lista zajednice">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+
+        <Label Grid.Row="0"
+               Text="Rangirano po ocenama korisnika ove aplikacije (ne po Kitsu oceni)."
+               Style="{StaticResource Caption}" />
+
+        <Picker Grid.Row="1"
+                Title="Minimalan broj ocena"
+                ItemsSource="{Binding MinVotesOptions}"
+                SelectedIndex="{Binding SelectedMinVotesIndex}" />
+
+        <Label Grid.Row="2"
+               Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource ScoreLow}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+        <RefreshView Grid.Row="3"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding LoadCommand}">
+
+            <CollectionView x:Name="TopList"
+                            ItemsSource="{Binding Items}"
+                            SelectionMode="Single"
+                            SelectionChanged="OnItemSelected">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:CommunityRankItem">
+                        <Border Style="{StaticResource ReviewCardStyle}">
+                            <Grid ColumnDefinitions="34,64,*" ColumnSpacing="10">
+
+                                <Label Grid.Column="0"
+                                       Text="{Binding RankText}"
+                                       FontAttributes="Bold"
+                                       FontSize="18"
+                                       TextColor="{StaticResource PrimaryAccent}"
+                                       VerticalOptions="Center" />
+
+                                <Border Grid.Column="1" Style="{StaticResource PosterClip}">
+                                    <Image Source="{Binding ImageUrl}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="84"
+                                           WidthRequest="64" />
+                                </Border>
+
+                                <VerticalStackLayout Grid.Column="2" Spacing="6" VerticalOptions="Center">
+                                    <Label Text="{Binding Title}"
+                                           FontAttributes="Bold"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Border Style="{StaticResource ScoreBadgeStyle}">
+                                            <Label Style="{StaticResource ScoreBadgeLabelStyle}"
+                                                   Text="{Binding AverageText}" />
+                                        </Border>
+                                        <Label Text="{Binding VotesText}"
+                                               Style="{StaticResource Caption}"
+                                               VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <controls:RatingBar RatingValue="{Binding Average}" MaxRating="10" ShowStars="True" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <Label Text="Još uvek nema dovoljno ocena za top listu."
+                           HorizontalOptions="Center"
+                           Margin="0,40"
+                           Style="{StaticResource Caption}" />
+                </CollectionView.EmptyView>
+
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator Grid.Row="3"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+
+    </Grid>
+
+</ContentPage>

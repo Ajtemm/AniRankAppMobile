@@ -7,7 +7,7 @@
              x:DataType="vm:AdminViewModel"
              Title="Admin Panel">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
 
         <Label Grid.Row="0" Text="Administracija" Style="{StaticResource SectionTitle}" />
 
@@ -16,16 +16,39 @@
                 Style="{StaticResource SubtleButton}"
                 Command="{Binding OpenAllReviewsCommand}" />
 
-        <SearchBar Grid.Row="2"
+        <Border Grid.Row="2" Style="{StaticResource FilterCardStyle}">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Dodaj korisnika ručno" Style="{StaticResource SectionTitle}" FontSize="15" />
+
+                <Entry Placeholder="Korisničko ime" Text="{Binding NewUsername}" />
+                <Entry Placeholder="Email" Keyboard="Email" Text="{Binding NewEmail}" />
+                <Entry Placeholder="Lozinka (min. 6 karaktera)" IsPassword="True" Text="{Binding NewPassword}" />
+
+                <HorizontalStackLayout Spacing="8">
+                    <Switch IsToggled="{Binding NewUserIsAdmin}" />
+                    <Label Text="Admin nalog" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <Label Text="{Binding AddUserMessage}"
+                       TextColor="{StaticResource ScoreHigh}"
+                       IsVisible="{Binding AddUserMessage, Converter={StaticResource NotEmpty}}" />
+
+                <Button Text="Dodaj korisnika"
+                        Command="{Binding AddUserCommand}"
+                        IsEnabled="{Binding IsNotBusy}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <SearchBar Grid.Row="3"
                    Placeholder="Pretraži korisnike (ime ili email)..."
                    Text="{Binding UserSearch}" />
 
-        <Label Grid.Row="3"
+        <Label Grid.Row="4"
                Text="{Binding ErrorMessage}"
                TextColor="{StaticResource ScoreLow}"
                IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
 
-        <CollectionView Grid.Row="4" ItemsSource="{Binding Users}">
+        <CollectionView Grid.Row="5" ItemsSource="{Binding Users}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="model:User">
                     <Border Style="{StaticResource ReviewCardStyle}">
@@ -77,7 +100,7 @@
             </CollectionView.EmptyView>
         </CollectionView>
 
-        <ActivityIndicator Grid.Row="4"
+        <ActivityIndicator Grid.Row="5"
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}"
                            VerticalOptions="Center"

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using AniRankApp.Models;
 using AniRankApp.Services;
 using AniRankApp.Views;
+using Microsoft.Maui.Networking;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -11,16 +12,26 @@ public partial class ExploreViewModel : BaseViewModel
 {
     private const int PageSize = 20;
 
+    /// <summary>How long we wait after the last filter change before hitting the API.</summary>
+    private const int FilterDebounceMs = 350;
+
     private readonly KitsuApiService _api;
+    private readonly DatabaseService _db;
+
+    /// <summary>Ids already in <see cref="Animes"/> - kept so paging dedup is O(1) per item.</summary>
+    private readonly HashSet<string> _loadedIds = new();
+
     private CancellationTokenSource? _cts;
+    private CancellationTokenSource? _debounceCts;
     private bool _bulkUpdate;
     private bool _loadingMore;
     private int _offset;
     private bool _hasMore = true;
 
-    public ExploreViewModel(KitsuApiService api)
+    public ExploreViewModel(KitsuApiService api, DatabaseService db)
     {
         _api = api;
+        _db = db;
         Title = "Istraži";
     }
 
@@ -42,15 +53,43 @@ public partial class ExploreViewModel : BaseViewModel
     [ObservableProperty] private int selectedTypeIndex;
     [ObservableProperty] private int selectedStatusIndex;
     [ObservableProperty] private string resultInfo = string.Empty;
+    [ObservableProperty] private bool isOffline;
+    [ObservableProperty] private string offlineNotice = string.Empty;
+
+    /// <summary>Typing filters the catalogue too - debounced like the pickers.</summary>
+    partial void OnSearchTextChanged(string value) => ReloadIfNotBulk();
 
     partial void OnSelectedSortIndexChanged(int value) => ReloadIfNotBulk();
     partial void OnSelectedTypeIndexChanged(int value) => ReloadIfNotBulk();
     partial void OnSelectedStatusIndexChanged(int value) => ReloadIfNotBulk();
 
+    /// <summary>
+    /// Picker changes come in bursts (sort + tip + status). Instead of firing one HTTP
+    /// request per change, wait out a short pause and load only the final combination.
+    /// </summary>
     private void ReloadIfNotBulk()
     {
-        if (!_bulkUpdate)
-            ApplyCommand.Execute(null);
+        if (_bulkUpdate) return;
+
+        _debounceCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _debounceCts = cts;
+
+        _ = DebouncedReloadAsync(cts.Token);
+    }
+
+    private async Task DebouncedReloadAsync(CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(FilterDebounceMs, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // a newer filter change took over
+        }
+
+        await LoadFirstPageAsync();
     }
 
     /// <summary>Called from the view's OnAppearing - loads the first page once.</summary>
@@ -155,11 +194,10 @@ public partial class ExploreViewModel : BaseViewModel
     /// <summary>Appends items whose id isn't already loaded; returns how many were added.</summary>
     private int Append(IEnumerable<Anime> list)
     {
-        var seen = Animes.Select(a => a.Id).ToHashSet();
         var added = 0;
         foreach (var a in list)
         {
-            if (seen.Add(a.Id))
+            if (_loadedIds.Add(a.Id))
             {
                 Animes.Add(a);
                 added++;
@@ -178,8 +216,17 @@ public partial class ExploreViewModel : BaseViewModel
         {
             IsBusy = true;
             ErrorMessage = null;
+            IsOffline = false;
+            OfflineNotice = string.Empty;
             _offset = 0;
             _hasMore = true;
+
+            // No point calling the API without a connection - show the last cached page.
+            if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+            {
+                await ShowCachedAsync("Nema internet konekcije.");
+                return;
+            }
 
             var filter = BuildFilter();
             filter.Offset = 0;
@@ -189,6 +236,7 @@ public partial class ExploreViewModel : BaseViewModel
             if (ct.IsCancellationRequested) return;
 
             Animes.Clear();
+            _loadedIds.Clear();
             Append(list);
             _offset = list.Count;
             // The trending endpoint returns a short fixed set; still allow paging,
@@ -198,6 +246,8 @@ public partial class ExploreViewModel : BaseViewModel
             ResultInfo = Animes.Count == 0 ? string.Empty : $"{Animes.Count} rezultata";
             if (Animes.Count == 0)
                 ErrorMessage = "Nema rezultata za zadate filtere.";
+            else
+                await _db.SaveAnimeCacheAsync(Animes.ToList());
         }
         catch (OperationCanceledException)
         {
@@ -205,12 +255,45 @@ public partial class ExploreViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Greška pri učitavanju sa Kitsu API-ja: {ex.Message}";
+            // The API is unreachable (flaky mobile data, DNS, timeout) - fall back to the cache.
+            if (!await ShowCachedAsync("Kitsu API trenutno nije dostupan."))
+                ErrorMessage = $"Greška pri učitavanju sa Kitsu API-ja: {ex.Message}";
         }
         finally
         {
             IsBusy = false;
             IsRefreshing = false;
         }
+    }
+
+    /// <summary>
+    /// Fills the list from the locally cached page. Returns false when nothing is cached
+    /// yet, so the caller can show a plain error instead.
+    /// </summary>
+    private async Task<bool> ShowCachedAsync(string reason)
+    {
+        var cached = await _db.GetCachedAnimeAsync();
+        if (cached.Count == 0)
+        {
+            IsOffline = true;
+            OfflineNotice = $"{reason} Nema sačuvanih podataka za offline prikaz.";
+            return false;
+        }
+
+        Animes.Clear();
+        _loadedIds.Clear();
+        Append(cached);
+
+        _hasMore = false; // paging needs the API
+        _offset = cached.Count;
+
+        var savedAt = await _db.GetAnimeCacheTimeAsync();
+        IsOffline = true;
+        OfflineNotice = savedAt is { } dt
+            ? $"{reason} Prikazan je spisak sačuvan {dt.ToLocalTime():dd.MM.yyyy HH:mm}."
+            : $"{reason} Prikazan je poslednji sačuvan spisak.";
+
+        ResultInfo = $"{Animes.Count} sačuvanih";
+        return true;
     }
 }

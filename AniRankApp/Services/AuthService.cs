@@ -22,7 +22,7 @@ public class AuthService
         DateTime.TryParse(Preferences.Get(PrefKeys.LoginAt, string.Empty), out var dt) ? dt : null;
 
     // ---- Registration ----
-    public async Task<(bool ok, string error)> RegisterAsync(string username, string email, string password)
+    public async Task<(bool ok, string error)> RegisterAsync(string username, string email, string password, string role = "User")
     {
         username = username?.Trim() ?? string.Empty;
         email = email?.Trim() ?? string.Empty;
@@ -43,7 +43,7 @@ public class AuthService
             Username = username,
             Email = email,
             PasswordHash = SecurityHelper.Hash(password),
-            Role = "User",
+            Role = role,
             CreatedAt = DateTime.UtcNow
         });
 
@@ -70,10 +70,32 @@ public class AuthService
     // ---- Session persistence ----
     public void SaveSession(User user)
     {
+        SaveIdentity(user);
+        Preferences.Set(PrefKeys.LoginAt, DateTime.UtcNow.ToString("o"));
+    }
+
+    /// <summary>
+    /// Re-reads the account from the database and refreshes the cached identity.
+    /// <see cref="Preferences"/> are only a cache - the database decides who you are and
+    /// which role you have, so a hand-edited preferences file can't grant Admin rights.
+    /// Returns the account, or null when it is gone or banned.
+    /// </summary>
+    public async Task<User?> RefreshSessionAsync()
+    {
+        if (!IsLoggedIn) return null;
+
+        var user = await _db.GetUserByIdAsync(CurrentUserId);
+        if (user is null || user.IsBanned) return null;
+
+        SaveIdentity(user);
+        return user;
+    }
+
+    private static void SaveIdentity(User user)
+    {
         Preferences.Set(PrefKeys.UserId, user.Id);
         Preferences.Set(PrefKeys.Username, user.Username);
         Preferences.Set(PrefKeys.Role, user.Role);
-        Preferences.Set(PrefKeys.LoginAt, DateTime.UtcNow.ToString("o"));
     }
 
     public void Logout()
@@ -83,4 +105,18 @@ public class AuthService
         Preferences.Remove(PrefKeys.Role);
         Preferences.Remove(PrefKeys.LoginAt);
     }
+
+    // ---- "New follower" badge bookkeeping ----
+
+    /// <summary>Per account, so two users on the same device don't share the badge state.</summary>
+    private string FollowersSeenKey => $"{PrefKeys.FollowersSeenAt}_{CurrentUserId}";
+
+    /// <summary>Moment the follower list was last reviewed (epoch start when never).</summary>
+    public DateTime FollowersSeenAt =>
+        DateTime.TryParse(Preferences.Get(FollowersSeenKey, string.Empty), out var dt)
+            ? dt.ToUniversalTime()
+            : DateTime.MinValue;
+
+    public void MarkFollowersSeen()
+        => Preferences.Set(FollowersSeenKey, DateTime.UtcNow.ToString("o"));
 }

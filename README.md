@@ -36,31 +36,36 @@ AniRankApp/
 ├── Models/
 │   ├── User.cs               SQLite tabela "Users"
 │   ├── Review.cs             SQLite tabela "Reviews"
+│   ├── Follow.cs             SQLite tabela "Follows" (ko koga prati)
+│   ├── ReviewLike.cs         SQLite tabela "ReviewLikes" ("korisno" glasovi)
+│   ├── CachedAnime.cs        SQLite tabela "CachedAnime" (offline keš Explore strane)
+│   ├── CommunityRankItem.cs  Stavka top liste (prosek lokalnih ocena po animeu)
 │   ├── KitsuModels.cs        DTO za JSON:API odgovore (KitsuAnimeResponse, KitsuAnimeData, KitsuAttributes, ...)
 │   └── Anime.cs              UI model + mapiranje FromKitsu(...)
 ├── Services/
 │   ├── DatabaseService.cs    SQLiteAsyncConnection, kreiranje tabela, seed admina, CRUD
 │   ├── AuthService.cs        Registracija, login, sesija u Preferences, logout
 │   └── KitsuApiService.cs    GetTrendingAnimeAsync / SearchAnimeAsync / GetAnimeDetailsAsync
-│   └── FileExportService.cs  Izvoz recenzija u .json / .txt na lokalno skladište
 ├── ViewModels/
 │   ├── BaseViewModel.cs      ObservableObject, IsBusy/IsNotBusy, Title, ErrorMessage
 │   ├── LoginViewModel.cs / RegisterViewModel.cs
 │   ├── ExploreViewModel.cs / AnimeDetailViewModel.cs
 │   ├── MyReviewsViewModel.cs / ProfileViewModel.cs / AdminViewModel.cs
+│   ├── CommunityViewModel.cs / UserProfileViewModel.cs / TopListViewModel.cs
 ├── Views/
 │   ├── LoginView / RegisterView
 │   ├── ExploreView / AnimeDetailView
 │   ├── MyReviewsView / ProfileView / AdminView
+│   ├── CommunityView / UserProfileView / TopListView
 ├── Controls/
 │   └── RatingBar.xaml(.cs)   Custom ContentView sa BindableProperty (RatingValue, MaxRating, ShowStars)
 ├── Converters/Converters.cs  NotEmptyBoolConverter, InvertedBoolConverter
-├── Helpers/                  PrefKeys, SecurityHelper (SHA-256), ServiceHelper (DI most)
+├── Helpers/                  PrefKeys, SecurityHelper (SHA-256), ServiceHelper (DI most), ToastHelper
 ├── Resources/Styles/
 │   ├── Colors.xaml           (iz šablona)
 │   ├── Styles.xaml           (iz šablona)
 │   └── CustomStyles.xaml     Stilovi kartica, Trigger + DataTrigger za bedž ocene
-├── AppShell.xaml(.cs)        Shell + TabBar (Istraži / Recenzije / Profil / Admin*)
+├── AppShell.xaml(.cs)        Shell + TabBar (Istraži / Zajednica / Profil / Admin*)
 ├── App.xaml(.cs)            Merge ResourceDictionary-ja, kreira AppShell
 └── MauiProgram.cs            DI registracija servisa, VM-ova i View-ova
 ```
@@ -73,8 +78,8 @@ AniRankApp/
 |---|--------|-----------------------|
 | 1 | **Shell + Tabbed navigacija** | `AppShell.xaml` — `Shell` sa `TabBar` i 4 `Tab` elementa; auth ekrani kao zasebni `ShellContent`. Admin tab ima `IsVisible="{Binding IsAdmin}"`. |
 | 2 | **MVVM + Data Binding + INotifyPropertyChanged / CommunityToolkit.Mvvm** | Svi `*ViewModel` nasleđuju `BaseViewModel : ObservableObject`; `[ObservableProperty]`, `[RelayCommand]`; View-ovi drže samo `BindingContext` + tanke event handler-e. |
-| 3 | **SQLite (sqlite-net-pcl)** | `DatabaseService` — `SQLiteAsyncConnection`, `CreateTableAsync<User>/<Review>`, sve tražene CRUD metode (`InsertReviewAsync`, `GetReviewsForAnimeAsync`, `GetUserReviewsAsync`, `GetAllReviewsAsync`, `DeleteReviewAsync`, `GetAllUsersAsync`, `DeleteUserAsync`). Seed admina pri prvom pokretanju. |
-| 4 | **Sesija u lokalne fajlove / Preferences** | `AuthService` čuva `CurrentUserId/Username/Role` u `Preferences`; `AppShell` pri startu čita sesiju i radi auto-login. `FileExportService` piše `.json/.txt` u `FileSystem.AppDataDirectory`. |
+| 3 | **SQLite (sqlite-net-pcl)** | `DatabaseService` — `SQLiteAsyncConnection`, `CreateTableAsync<User>/<Review>/<Follow>`, sve tražene CRUD metode (`InsertReviewAsync`, `GetReviewsForAnimeAsync`, `GetUserReviewsAsync`, `GetAllReviewsAsync`, `DeleteReviewAsync`, `GetAllUsersAsync`, `DeleteUserAsync`). Seed admina pri prvom pokretanju. |
+| 4 | **Sesija u lokalne fajlove / Preferences** | `AuthService` čuva `CurrentUserId/Username/Role` u `Preferences`; `AppShell` pri startu čita sesiju i radi auto-login. SQLite baza (`anirank.db3`) je lokalni fajl u `FileSystem.AppDataDirectory`. |
 | 5 | **Async klijent-server (HttpClient)** | `KitsuApiService` — `HttpClient` + `GetFromJsonAsync`, `CancellationToken`, poziva `trending/anime`, `anime?filter[text]=`, `anime/{id}`. Sve I/O je `async/await`. |
 | 6 | **CollectionView + DataTemplate** | `ExploreView`, `MyReviewsView`, `AnimeDetailView` (lista recenzija), `AdminView` (2 liste) — svi koriste `CollectionView` sa `DataTemplate` i `EmptyView`. |
 | 7 | **Trigeri i Stilovi (ResourceDictionary)** | `Resources/Styles/CustomStyles.xaml` — `AnimeCardStyle`/`ReviewCardStyle` za kartice; `ScoreBadgeStyle` sa `DataTrigger` (zelena ≥8, žuta 5–7, crvena <5); property `Trigger` na `Entry` (fokus). |
@@ -94,8 +99,14 @@ Dodatno: `ActivityIndicator` spinneri na svim ekranima koji učitavaju sa API-ja
 - **AnimeDetailView** — banner + poster + synopsis + status/epizode; forma za
   recenziju (`Slider` 1–10 + `RatingBar` preview + `Editor`); lista SQLite recenzija
   ostalih korisnika.
-- **MyReviewsView** — recenzije ulogovanog korisnika + brisanje sopstvenih.
-- **ProfileView** — podaci o nalogu i ulozi; izvoz recenzija u `.json`/`.txt`; odjava.
+- **MyReviewsView** — recenzije jednog profila (otvara se sa profila, ruta
+  `reviews?userId=...&status=...`); brisanje samo na sopstvenoj listi.
+- **CommunityView** — pretraga ostalih korisnika, čipovi Svi / Pratim / Prate me,
+  dugme Zaprati/Otprati; klik na korisnika otvara njegov javni profil.
+- **UserProfileView** — javni profil drugog korisnika: brojači pratilaca, dugme za
+  praćenje i raspodela po statusu koja vodi na njegove recenzije.
+- **ProfileView** — podaci o nalogu i ulozi, brojači pratilaca, klikabilna
+  raspodela po statusu (vodi na te recenzije); odjava.
 - **AdminView** (samo Admin) — pregled/brisanje svih korisnika i svih recenzija.
 
 ---
@@ -145,6 +156,86 @@ Dodatno: `ActivityIndicator` spinneri na svim ekranima koji učitavaju sa API-ja
 - **Revalidacija aktivne sesije**: ako je Admin banovao korisnika koji je već
   prijavljen na uređaju, `AppShell` pri sledećem pokretanju aplikacije proverava
   status naloga, automatski ga odjavljuje i prikazuje isto obaveštenje.
+
+## Dodatne funkcije (v1.4)
+
+- **Tab „Zajednica" umesto taba „Recenzije"**: `CommunityView` prikazuje sve
+  ostale (nebanovane) korisnike sa `SearchBar` pretragom po imenu i čipovima
+  **Svi / Pratim / Prate me**.
+- **Praćenje korisnika**: nova tabela `Follows` (`Models/Follow.cs`) i metode
+  `FollowAsync` / `UnfollowAsync` / `GetFollowingIdsAsync` / `GetFollowerIdsAsync`
+  u `DatabaseService`. Praćenje je jednosmerno — svako može da zaprati nazad,
+  pa kartica dobije bedž „Prati te". Profil prikazuje brojače pratilaca.
+- **Recenzije se otvaraju sa profila**: `MyReviewsView` je sad ruta
+  `reviews?userId={id}&status={status}` — klik na red u raspodeli po statusu
+  (npr. „Completed") otvara baš te recenzije tog profila. Ista strana služi i za
+  tuđe profile, samo bez dugmeta „Obriši" (`CanDelete`).
+- **Javni profil korisnika**: `UserProfileView` (`userprofile?userId={id}`) —
+  brojači, dugme Zaprati/Otprati i raspodela po statusu.
+- **Uklonjen izvoz recenzija** u `.json`/`.txt` sa profila (`FileExportService`
+  je obrisan).
+
+### Optimizacije (v1.4)
+
+- **Nema više N+1 upita**: `AnimeDetailViewModel` i `AdminUserReviewsViewModel` su
+  radili jedan `GetUserByIdAsync` po recenziji; sada se imena autora povuku odjednom
+  (`DatabaseService.GetUsernamesAsync()` — projektovan upit, samo `Id, Username`).
+- **Brojači preko SQL-a**: `CountFollowersAsync` / `CountFollowingAsync` rade
+  `SELECT COUNT(*)` umesto učitavanja svih redova; `GetReviewCountsByUserAsync` i
+  `GetFollowerCountsAsync` povlače samo jednu kolonu.
+- **Ažuriranje recenzije** više ne povlači ceo spisak recenzija tog animea da bi
+  našlo jednu (`GetReviewByIdAsync`).
+- **Thread-safe inicijalizacija baze** (`SemaphoreSlim` + objava veze tek kad je
+  šema spremna) — dva ekrana koja istovremeno krenu u bazu više ne mogu da naprave
+  dve veze ni duplirani seed admina.
+- **Unique indeks `(FollowerId, FollowingId)`** + `INSERT OR IGNORE` — dupli tap na
+  „Zaprati" ne može da napravi duplu vezu.
+- **Debounce na Explore filterima** (350 ms): promena sortiranja/tipa/statusa u
+  nizu šalje jedan HTTP zahtev umesto tri.
+- **Dedup paginacije u O(1)**: `HashSet` id-jeva se drži u ViewModel-u umesto da se
+  gradi iznova pri svakoj sledećoj strani.
+- **Keš detalja animea** (poslednjih 50) u `KitsuApiService` — povratak na već
+  otvoren anime ne pravi nov HTTP poziv.
+- **`ProfileViewModel.LoadAsync` je zaštićen `try/catch`** — poziva se iz
+  `OnAppearing` (`async void`), gde bi izuzetak srušio aplikaciju.
+
+## Dodatne funkcije (v1.5)
+
+**Zajednica**
+- **Feed** (prvi čip u tabu Zajednica): šta su poslednje ocenili korisnici koje pratiš
+  (`DatabaseService.GetFeedAsync`, jedan upit sa `IN` listom). Klik na karticu vodi na taj anime.
+- **„Korisno" glasovi na recenzijama**: tabela `ReviewLikes` (unique po `(ReviewId, UserId)`),
+  dugme ♡/♥ na tuđim recenzijama i sortiranje recenzija **Najkorisnije / Najnovije /
+  Najbolje ocenjene** na strani animea.
+- **Bedž za nove pratioce**: tab dobije oznaku „Zajednica ●" kad te neko zaprati od
+  poslednjeg pregleda; baner „Imaš N novih pratilaca" + dugme Pogledaj briše oznaku
+  (stanje se pamti po nalogu u `Preferences`).
+- **Privatan profil** (`User.IsPrivate`, prekidač na Profilu): listu vide samo pratioci
+  (vlasnik i Admin uvek). Zaštita važi i na javnom profilu i na strani sa recenzijama.
+
+**Anime**
+- **Ocena zajednice** pored Kitsu ocene — prosek ocena datih *u ovoj aplikaciji*
+  (`GetAnimeRatingStatsAsync`, `AVG` u SQL-u).
+- **Top lista zajednice** (`toplist`, dugme u tabu Zajednica): rang-lista animea po
+  lokalnim ocenama, sa filterom minimalnog broja ocena.
+- **Napredak po epizodama** (`Review.EpisodesWatched`): polje u formi (sakriveno za
+  „Plan to Watch") i bedž „Odgledano: N ep." na karticama.
+- **Offline režim**: poslednja učitana strana se čuva u tabelu `CachedAnime`; bez
+  interneta (ili kad API ne odgovara) Explore prikazuje sačuvani spisak uz obaveštenje
+  kada je snimljen.
+
+**Sesija i UX**
+- **Uloga se čita iz baze, ne iz `Preferences`**: `AuthService.RefreshSessionAsync()`
+  pri startu osvežava `Role`/`Username` iz baze, pa ručno menjanje preferenci ne može
+  da doda Admin tab. (Lozinke ostaju SHA-256, po dogovoru.)
+- **`Review.UpdatedAt`**: izmena više ne prepisuje `CreatedAt` — datum unosa ostaje, a
+  kartica prikazuje „Izmenjeno ...". Sortiranje koristi `LastActivityAt`.
+- **Sortiranje moje liste**: Najnovije / Najstarije / Najveća ocena / Najmanja ocena /
+  Naziv (A-Š).
+- **Swipe-to-delete** na listi recenzija (isključen na tuđoj listi).
+- **Toast umesto `DisplayAlert`** za potvrde (`Helpers/ToastHelper.cs` — native Android
+  toast, bez dodatnog paketa).
+- **Debounce i na Explore pretrazi** (350 ms), isto kao na filterima.
 
 ## Napomene
 

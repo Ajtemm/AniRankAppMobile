@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using AniRankApp.Helpers;
 using AniRankApp.Models;
 using AniRankApp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6,7 +7,12 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace AniRankApp.ViewModels;
 
-public partial class MyReviewsViewModel : BaseViewModel
+/// <summary>
+/// Review list of one profile. Reached from a profile (mine or someone else's) with
+/// "userId" and an optional "status" preselecting the filter chip. Deleting is only
+/// offered on my own list.
+/// </summary>
+public partial class MyReviewsViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly DatabaseService _db;
     private readonly AuthService _auth;
@@ -27,12 +33,44 @@ public partial class MyReviewsViewModel : BaseViewModel
     /// <summary>"Sve" + every watch status - bound to the filter chip bar.</summary>
     public IReadOnlyList<string> StatusFilters { get; } = WatchStatus.Filters;
 
+    /// <summary>Order of the list below the chips.</summary>
+    public IReadOnlyList<string> SortOptions { get; } =
+        new[] { "Najnovije", "Najstarije", "Najveća ocena", "Najmanja ocena", "Naziv (A-Š)" };
+
+    /// <summary>Whose list is shown. 0 until a query sets it -> falls back to me.</summary>
+    public int UserId { get; private set; }
+
     [ObservableProperty] private bool hasNoReviews;
     [ObservableProperty] private bool isRefreshing;
     [ObservableProperty] private string selectedStatusFilter = WatchStatus.FilterAll;
     [ObservableProperty] private string summary = string.Empty;
+    [ObservableProperty] private string headerText = string.Empty;
+    [ObservableProperty] private bool canDelete = true;
+    [ObservableProperty] private int selectedSortIndex;
+    [ObservableProperty] private string privacyNotice = string.Empty;
 
     partial void OnSelectedStatusFilterChanged(string value) => ApplyFilter();
+
+    partial void OnSelectedSortIndexChanged(int value) => ApplyFilter();
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        UserId = query.TryGetValue("userId", out var rawId) && int.TryParse(rawId?.ToString(), out var id)
+            ? id
+            : _auth.CurrentUserId;
+
+        if (query.TryGetValue("status", out var rawStatus))
+        {
+            var status = Uri.UnescapeDataString(rawStatus?.ToString() ?? string.Empty);
+            SelectedStatusFilter = WatchStatus.Filters.Contains(status) ? status : WatchStatus.FilterAll;
+        }
+        else
+        {
+            SelectedStatusFilter = WatchStatus.FilterAll;
+        }
+
+        _ = LoadAsync();
+    }
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -45,7 +83,35 @@ public partial class MyReviewsViewModel : BaseViewModel
             IsRefreshing = true;
             ErrorMessage = null;
 
-            var list = await _db.GetUserReviewsAsync(_auth.CurrentUserId);
+            var me = _auth.CurrentUserId;
+            var targetId = UserId > 0 ? UserId : me;
+            CanDelete = targetId == me;
+            PrivacyNotice = string.Empty;
+
+            if (CanDelete)
+            {
+                Title = "Moje Recenzije";
+                HeaderText = "Moje recenzije";
+            }
+            else
+            {
+                var owner = await _db.GetUserByIdAsync(targetId);
+                Title = owner?.Username ?? "Recenzije";
+                HeaderText = $"Recenzije korisnika: {owner?.Username ?? "?"}";
+
+                // A private profile is readable only by its followers (and admins).
+                if (owner is { IsPrivate: true } && !_auth.IsAdmin && !await _db.IsFollowingAsync(me, targetId))
+                {
+                    PrivacyNotice = $"Profil korisnika \"{owner.Username}\" je privatan. " +
+                                    "Zaprati ga da bi video njegovu listu.";
+                    _all.Clear();
+                    Summary = string.Empty;
+                    ApplyFilter();
+                    return;
+                }
+            }
+
+            var list = await _db.GetUserReviewsAsync(targetId);
             _all.Clear();
             _all.AddRange(list);
 
@@ -83,6 +149,16 @@ public partial class MyReviewsViewModel : BaseViewModel
         if (SelectedStatusFilter != WatchStatus.FilterAll)
             query = query.Where(r => WatchStatus.Normalize(r.Status) == SelectedStatusFilter);
 
+        // Sorting runs over the already loaded list - no extra database work.
+        query = SelectedSortIndex switch
+        {
+            1 => query.OrderBy(r => r.LastActivityAt),
+            2 => query.OrderByDescending(r => r.Rating).ThenByDescending(r => r.LastActivityAt),
+            3 => query.OrderBy(r => r.Rating).ThenByDescending(r => r.LastActivityAt),
+            4 => query.OrderBy(r => r.AnimeTitle, StringComparer.CurrentCultureIgnoreCase),
+            _ => query.OrderByDescending(r => r.LastActivityAt)
+        };
+
         Reviews.Clear();
         foreach (var r in query)
             Reviews.Add(r);
@@ -93,7 +169,7 @@ public partial class MyReviewsViewModel : BaseViewModel
     [RelayCommand]
     private async Task DeleteReviewAsync(Review? review)
     {
-        if (review is null) return;
+        if (review is null || !CanDelete) return;
 
         var confirm = await Shell.Current.DisplayAlertAsync(
             "Brisanje", $"Obrisati recenziju za \"{review.AnimeTitle}\"?", "Obriši", "Otkaži");
@@ -103,5 +179,7 @@ public partial class MyReviewsViewModel : BaseViewModel
         _all.RemoveAll(r => r.Id == review.Id);
         BuildSummary();
         ApplyFilter();
+
+        await ToastHelper.ShowAsync("Recenzija je obrisana.");
     }
 }

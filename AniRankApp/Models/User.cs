@@ -21,6 +21,9 @@ public class User
     /// <summary>Set by an Admin instead of deleting the account. Blocks login.</summary>
     public bool IsBanned { get; set; }
 
+    /// <summary>Private profile: only followers (and the owner/admins) see the watch list.</summary>
+    public bool IsPrivate { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // ---- Not persisted (display helpers) ----

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:model="clr-namespace:AniRankApp.Models"
+             x:Class="AniRankApp.Views.CommunityView"
+             x:DataType="vm:CommunityViewModel"
+             Title="Zajednica">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="Zajednica" Style="{StaticResource Hero}" FontSize="24" />
+                <Label Text="Prati druge korisnike i vidi šta gledaju."
+                       Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+
+            <Button Grid.Column="1"
+                    Text="Top lista"
+                    Style="{StaticResource SubtleButton}"
+                    HeightRequest="38"
+                    FontSize="12"
+                    VerticalOptions="Center"
+                    Command="{Binding OpenTopListCommand}" />
+        </Grid>
+
+        <!-- ===== New follower notice ===== -->
+        <Border Grid.Row="1"
+                Style="{StaticResource FilterCardStyle}"
+                IsVisible="{Binding HasNewFollowers}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Label Grid.Column="0"
+                       Text="{Binding NewFollowerText}"
+                       TextColor="{StaticResource PrimaryAccent}"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center" />
+                <Button Grid.Column="1"
+                        Text="Pogledaj"
+                        HeightRequest="36"
+                        FontSize="12"
+                        Command="{Binding ShowNewFollowersCommand}" />
+            </Grid>
+        </Border>
+
+        <SearchBar Grid.Row="2"
+                   Placeholder="Pretraži korisnike po imenu..."
+                   Text="{Binding SearchText}"
+                   IsVisible="{Binding ShowUsers}" />
+
+        <!-- ===== Feed / Svi / Pratim / Prate me ===== -->
+        <CollectionView Grid.Row="3"
+                        HeightRequest="46"
+                        ItemsSource="{Binding Segments}"
+                        SelectedItem="{Binding SelectedSegment}"
+                        SelectionMode="Single">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="sys:String">
+                    <Border Style="{StaticResource FilterChipStyle}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="Selected">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                        <Setter Property="Stroke" Value="{StaticResource Primary}" />
+                                        <Setter TargetName="SegmentLabel" Property="Label.TextColor" Value="#FFFFFF" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Label x:Name="SegmentLabel"
+                               Text="{Binding .}"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center" />
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <VerticalStackLayout Grid.Row="4" Spacing="2">
+            <Label Text="{Binding Summary}"
+                   Style="{StaticResource Caption}"
+                   IsVisible="{Binding Summary, Converter={StaticResource NotEmpty}}" />
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ScoreLow}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+        </VerticalStackLayout>
+
+        <!-- ===================== FEED ===================== -->
+        <RefreshView Grid.Row="5"
+                     IsVisible="{Binding ShowFeed}"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding LoadCommand}">
+
+            <CollectionView x:Name="FeedList"
+                            ItemsSource="{Binding Feed}"
+                            SelectionMode="Single"
+                            SelectionChanged="OnFeedEntrySelected">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:Review">
+                        <Border Style="{StaticResource ReviewCardStyle}">
+                            <Grid ColumnDefinitions="64,*" ColumnSpacing="10">
+
+                                <Border Grid.Column="0" Style="{StaticResource PosterClip}">
+                                    <Image Source="{Binding AnimeImageUrl}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="84"
+                                           WidthRequest="64" />
+                                </Border>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
+                                    <Label Text="{Binding Username}"
+                                           FontAttributes="Bold"
+                                           TextColor="{StaticResource PrimaryAccent}" />
+                                    <Label Text="{Binding AnimeTitle}"
+                                           FontAttributes="Bold"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Border Style="{StaticResource ScoreBadgeStyle}" IsVisible="{Binding HasRating}">
+                                            <Label Style="{StaticResource ScoreBadgeLabelStyle}"
+                                                   Text="{Binding RatingText}" />
+                                        </Border>
+                                        <Border Style="{StaticResource StatusBadgeStyle}">
+                                            <Label Style="{StaticResource StatusBadgeLabelStyle}"
+                                                   Text="{Binding StatusDisplay}" />
+                                        </Border>
+                                        <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding HasProgress}">
+                                            <Label Style="{StaticResource StatusBadgeLabelStyle}"
+                                                   Text="{Binding ProgressText}" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+
+                                    <Label Text="{Binding Comment}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation"
+                                           IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
+                                    <Label Text="{Binding LastActivityText}" Style="{StaticResource Caption}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <Label Text="{Binding FeedEmptyText}"
+                           x:DataType="vm:CommunityViewModel"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           Margin="20,40"
+                           Style="{StaticResource Caption}" />
+                </CollectionView.EmptyView>
+
+            </CollectionView>
+        </RefreshView>
+
+        <!-- ===================== USERS ===================== -->
+        <RefreshView Grid.Row="5"
+                     IsVisible="{Binding ShowUsers}"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding LoadCommand}">
+
+            <CollectionView x:Name="UserList"
+                            ItemsSource="{Binding Users}"
+                            SelectionMode="Single"
+                            SelectionChanged="OnUserSelected">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CommunityUserItem">
+                        <Border Style="{StaticResource ReviewCardStyle}">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+
+                                <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
+                                    <Label Text="{Binding Username}" FontAttributes="Bold" FontSize="16" />
+                                    <Label Text="{Binding JoinedText}" Style="{StaticResource Caption}" />
+                                    <Label Text="{Binding StatsText}" Style="{StaticResource Caption}" />
+
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding FollowsMe}">
+                                            <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="Prati te" />
+                                        </Border>
+                                        <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding IsFollowing}">
+                                            <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="Pratim ga" />
+                                        </Border>
+                                        <Border Style="{StaticResource BanBadgeStyle}" IsVisible="{Binding IsPrivate}">
+                                            <Label Style="{StaticResource BanBadgeLabelStyle}" Text="Privatan" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+
+                                <Button Grid.Column="1"
+                                        Text="{Binding FollowActionText}"
+                                        Style="{StaticResource SubtleButton}"
+                                        HeightRequest="38"
+                                        FontSize="12"
+                                        VerticalOptions="Center"
+                                        Clicked="OnFollowClicked" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <Label Text="{Binding EmptyText}"
+                           x:DataType="vm:CommunityViewModel"
+                           HorizontalOptions="Center"
+                           Margin="0,40"
+                           Style="{StaticResource Caption}" />
+                </CollectionView.EmptyView>
+
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator Grid.Row="5"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+
+    </Grid>
+
+</ContentPage>
