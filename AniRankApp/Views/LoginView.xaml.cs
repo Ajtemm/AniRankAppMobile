@@ -11,5 +11,15 @@ public partial class LoginView : ContentPage
     {
         InitializeComponent();
         BindingContext = vm;
+
+#if DEBUG
+        // The seeded admin account is a development convenience - never advertise it in Release.
+        DemoHint.IsVisible = true;
+#endif
     }
+
+    private void OnUsernameCompleted(object? sender, EventArgs e) => PasswordEntry.Focus();
+
+    private void OnTogglePasswordClicked(object? sender, EventArgs e)
+        => PasswordVisibility.Toggle(PasswordEntry, PasswordToggle);
 }

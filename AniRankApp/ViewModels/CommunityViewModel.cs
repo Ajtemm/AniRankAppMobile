@@ -274,6 +274,7 @@ public partial class CommunityViewModel : BaseViewModel
             ? Task.CompletedTask
             : Shell.Current.GoToAsync($"{nameof(AnimeDetailView)}?id={review.AnimeKitsuId}");
 
+    /// <summary>Empty feed call-to-action: jump to the full user list to find people to follow.</summary>
     [RelayCommand]
-    private Task OpenTopListAsync() => Shell.Current.GoToAsync("toplist");
+    private void BrowseUsers() => SelectedSegment = SegmentAll;
 }

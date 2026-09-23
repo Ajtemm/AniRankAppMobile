@@ -16,6 +16,9 @@ public record CommunityRankItem(
 
     public string RankText => $"{Rank}.";
 
+    /// <summary>Gold / silver / bronze for the podium, plain otherwise (DataTrigger key).</summary>
+    public string Medal => Rank switch { 1 => "Gold", 2 => "Silver", 3 => "Bronze", _ => "None" };
+
     public string AverageText => $"{Average:0.0}/10";
 
     public string VotesText => Votes switch

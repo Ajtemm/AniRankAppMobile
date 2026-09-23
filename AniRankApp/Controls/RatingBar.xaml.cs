@@ -62,7 +62,8 @@ public partial class RatingBar : ContentView
             {
                 StarsLayout.Children.Add(new Label
                 {
-                    Text = i <= filled ? "★" : "☆", // filled / empty star
+                    Text = i <= filled ? IconGlyphs.Star : IconGlyphs.StarBorder, // Material star / star_border
+                    FontFamily = "Icons",
                     FontSize = 16,
                     TextColor = color
                 });
@@ -71,13 +72,9 @@ public partial class RatingBar : ContentView
 
         ValueLabel.Text = $"{RatingValue:0.0} / {MaxRating}";
         ValueBadge.BackgroundColor = color;
+        ValueLabel.TextColor = ThemeColors.OnScore; // dark text: white on green/yellow is unreadable
+        SemanticProperties.SetDescription(this, $"Ocena {RatingValue:0.0} od {MaxRating}");
     }
 
-    private Color TierColor()
-    {
-        var pct = MaxRating > 0 ? RatingValue / MaxRating : 0;
-        if (pct >= 0.8) return Color.FromArgb("#2E7D32"); // green
-        if (pct >= 0.5) return Color.FromArgb("#F9A825"); // yellow
-        return Color.FromArgb("#C62828");                 // red
-    }
+    private Color TierColor() => ThemeColors.ForRating(RatingValue, MaxRating);
 }

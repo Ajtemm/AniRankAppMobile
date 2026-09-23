@@ -51,7 +51,23 @@ public partial class MyReviewsViewModel : BaseViewModel, IQueryAttributable
 
     partial void OnSelectedStatusFilterChanged(string value) => ApplyFilter();
 
-    partial void OnSelectedSortIndexChanged(int value) => ApplyFilter();
+    partial void OnSelectedSortIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(SortLabel));
+        ApplyFilter();
+    }
+
+    public string SortLabel => SortOptions[SelectedSortIndex];
+
+    /// <summary>Sort pill: action sheet with the options; cancelling keeps the current order.</summary>
+    [RelayCommand]
+    private async Task PickSortAsync()
+    {
+        var choice = await Shell.Current.DisplayActionSheetAsync("Sortiranje", "Otkaži", null, SortOptions.ToArray());
+        var index = choice is null ? -1 : SortOptions.ToList().IndexOf(choice);
+        if (index >= 0)
+            SelectedSortIndex = index;
+    }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {

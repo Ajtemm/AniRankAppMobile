@@ -22,6 +22,13 @@ public partial class AdminView : ContentPage
         await _vm.LoadAsync();
     }
 
+    /// <summary>Expands / collapses the "add user" form; the arrow flips with it.</summary>
+    private void OnAddUserHeaderTapped(object? sender, TappedEventArgs e)
+    {
+        AddUserForm.IsVisible = !AddUserForm.IsVisible;
+        AddUserChevron.Rotation = AddUserForm.IsVisible ? 180 : 0;
+    }
+
     private void OnOpenUserReviewsClicked(object? sender, EventArgs e)
     {
         if (sender is Button { BindingContext: User user })

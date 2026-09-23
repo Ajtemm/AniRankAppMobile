@@ -2,88 +2,110 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
              x:Class="AniRankApp.Views.ProfileView"
              x:DataType="vm:ProfileViewModel"
+             Shell.NavBarIsVisible="False"
              Title="Profil">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="16">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="16,20,16,24" Spacing="16" MaximumWidthRequest="640">
 
-            <Border Style="{StaticResource ReviewCardStyle}">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Prijavljeni korisnik" Style="{StaticResource Caption}" />
-                    <Label Text="{Binding Username}" FontSize="22" FontAttributes="Bold" />
+                <!-- ===== Identity ===== -->
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16" Margin="0,8,0,0">
+                    <Border Grid.Column="0" Style="{StaticResource AvatarStyle}" WidthRequest="72" HeightRequest="72">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="36" />
+                        </Border.StrokeShape>
+                        <Label Style="{StaticResource AvatarLabelStyle}" FontSize="26"
+                               Text="{Binding Username, Converter={StaticResource Initials}}" />
+                    </Border>
 
-                    <Label Text="{Binding Role, StringFormat='Uloga: {0}'}" />
-                    <Label Text="{Binding LoginInfo}" Style="{StaticResource Caption}" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="{Binding Username}" Style="{StaticResource Hero}" FontSize="24"
+                               LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+                        <HorizontalStackLayout Spacing="8">
+                            <Border Style="{StaticResource StatusBadgeStyle}">
+                                <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="{Binding Role}" />
+                            </Border>
+                            <Label Text="{Binding LoginInfo}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Grid>
 
-                    <HorizontalStackLayout Spacing="16">
-                        <Label Text="{Binding FollowerCount, StringFormat='Pratilaca: {0}'}" />
-                        <Label Text="{Binding FollowingCount, StringFormat='Pratim: {0}'}" />
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Border>
+                <!-- ===== Stats ===== -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                    <Border Grid.Column="0" Style="{StaticResource StatTileStyle}" SemanticProperties.Description="{Binding ReviewCount, StringFormat='{0} recenzija, otvori listu'}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenAllReviewsCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout>
+                            <Label Text="{Binding ReviewCount}" Style="{StaticResource StatValueStyle}" />
+                            <Label Text="Recenzija" Style="{StaticResource StatCaptionStyle}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource StatTileStyle}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding FollowerCount}" Style="{StaticResource StatValueStyle}" />
+                            <Label Text="Pratilaca" Style="{StaticResource StatCaptionStyle}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource StatTileStyle}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding FollowingCount}" Style="{StaticResource StatValueStyle}" />
+                            <Label Text="Pratim" Style="{StaticResource StatCaptionStyle}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
 
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="{StaticResource ScoreLow}"
-                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
-
-            <!-- ===== Privacy ===== -->
-            <Label Text="Privatnost" Style="{StaticResource SectionTitle}" />
-            <Border Style="{StaticResource ReviewCardStyle}">
-                <VerticalStackLayout Spacing="6">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Grid.Column="0" Text="Privatan profil" VerticalOptions="Center" />
-                        <Switch Grid.Column="1" IsToggled="{Binding IsPrivate}" />
+                <!-- ===== Privacy ===== -->
+                <Border Style="{StaticResource ReviewCardStyle}" Margin="0">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                        <Label Grid.Column="0" Style="{StaticResource Icon}" Text="{StaticResource IconLock}" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label Text="Privatan profil" FontFamily="OpenSansSemibold" />
+                            <Label Text="{Binding PrivacyHint}" Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding IsPrivate}" VerticalOptions="Center"
+                                SemanticProperties.Description="Privatan profil" />
                     </Grid>
-                    <Label Text="{Binding PrivacyHint}" Style="{StaticResource Caption}" />
-                </VerticalStackLayout>
-            </Border>
+                </Border>
 
-            <!-- ===== Watch-status breakdown - tap a row to see those reviews ===== -->
-            <Label Text="Moja lista po statusu" Style="{StaticResource SectionTitle}" />
-            <Label Text="Dodirni status da vidiš recenzije koje su sa ovog profila."
-                   Style="{StaticResource Caption}" />
+                <!-- ===== Watch-status breakdown - tap a row to see those reviews ===== -->
+                <Label Text="Moja lista" Style="{StaticResource SectionTitle}" Margin="0,4,0,-6" />
 
-            <Border Style="{StaticResource ReviewCardStyle}">
-                <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding StatusBreakdown}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:StatusCountItem">
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,10">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnStatusTapped" />
-                                </Grid.GestureRecognizers>
+                <Border Style="{StaticResource ReviewCardStyle}" Padding="14,4" Margin="0">
+                    <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding StatusBreakdown}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StatusCountItem">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,12"
+                                      SemanticProperties.Description="{Binding Status}">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnStatusTapped" />
+                                    </Grid.GestureRecognizers>
 
-                                <Label Grid.Column="0" Text="{Binding Status}" VerticalOptions="Center" />
-                                <Label Grid.Column="1"
-                                       Text="{Binding Count}"
-                                       FontAttributes="Bold"
-                                       VerticalOptions="Center"
-                                       TextColor="{StaticResource PrimaryAccent}" />
-                                <Label Grid.Column="2"
-                                       Text="›"
-                                       FontSize="18"
-                                       VerticalOptions="Center"
-                                       TextColor="{StaticResource Gray400}" />
-                            </Grid>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </VerticalStackLayout>
-            </Border>
+                                    <Label Grid.Column="0" Text="{Binding Status}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Count}"
+                                           FontFamily="OpenSansSemibold"
+                                           VerticalOptions="Center"
+                                           TextColor="{StaticResource PrimaryAccent}" />
+                                    <Label Grid.Column="2" Style="{StaticResource Icon}" Text="{StaticResource IconChevron}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </Border>
 
-            <Button Text="{Binding ReviewCount, StringFormat='Sve moje recenzije ({0})'}"
-                    Style="{StaticResource SubtleButton}"
-                    Command="{Binding OpenAllReviewsCommand}" />
+                <Button Text="{Binding ReviewCount, StringFormat='Sve moje recenzije ({0})'}"
+                        Style="{StaticResource SubtleButton}"
+                        Command="{Binding OpenAllReviewsCommand}" />
 
-            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" />
+            </VerticalStackLayout>
+        </ScrollView>
 
-            <Button Text="Odjava"
-                    Style="{StaticResource DangerButton}"
-                    HeightRequest="46"
-                    FontSize="14"
-                    Command="{Binding LogoutCommand}" />
-
-        </VerticalStackLayout>
-    </ScrollView>
+        <controls:ErrorBanner Message="{Binding ErrorMessage}" />
+    </Grid>
 
 </ContentPage>

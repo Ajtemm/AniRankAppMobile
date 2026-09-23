@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- App icon foreground layer: star over a ranking podium -->
+<!-- AniRank logo (login / register header) -->
 <svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#6C4DF6" />
+            <stop offset="1" stop-color="#B545D6" />
+        </linearGradient>
+    </defs>
+    <rect x="28" y="28" width="400" height="400" rx="96" fill="url(#g)" />
     <polygon points="228.0,112.0 245.6,157.7 294.6,160.4 256.5,191.3 269.1,238.6 228.0,212.0 186.9,238.6 199.5,191.3 161.4,160.4 210.4,157.7" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" />
     <rect x="166" y="276" width="36" height="34" rx="6" fill="#FFFFFF" fill-opacity="0.75" />
     <rect x="210" y="258" width="36" height="52" rx="6" fill="#FFFFFF" />

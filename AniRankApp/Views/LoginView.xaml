@@ -4,53 +4,86 @@
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
              x:Class="AniRankApp.Views.LoginView"
              x:DataType="vm:LoginViewModel"
-             Shell.FlyoutBehavior="Disabled"
+             Shell.NavBarIsVisible="False"
              Title="Prijava">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="24,48" Spacing="14" VerticalOptions="Center" MaximumWidthRequest="420">
 
-            <Label Text="AniRank"
-                   FontSize="40"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="{StaticResource PrimaryAccent}" />
+                <Image Source="logo.png"
+                       WidthRequest="88"
+                       HeightRequest="88"
+                       HorizontalOptions="Center"
+                       SemanticProperties.Description="AniRank logo" />
 
-            <Label Text="Prijavi se na svoj nalog"
-                   HorizontalOptions="Center"
-                   Style="{StaticResource Caption}" />
+                <Label Text="AniRank"
+                       Style="{StaticResource Hero}"
+                       FontSize="34"
+                       HorizontalOptions="Center"
+                       SemanticProperties.HeadingLevel="Level1" />
 
-            <Entry Placeholder="Korisničko ime"
-                   Text="{Binding Username}"
-                   ReturnType="Next" />
+                <Label Text="Ocenjuj anime, prati prijatelje, otkrij šta je top."
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       Margin="0,0,0,12"
+                       Style="{StaticResource Caption}" />
 
-            <Entry Placeholder="Lozinka"
-                   IsPassword="True"
-                   Text="{Binding Password}"
-                   ReturnType="Done" />
+                <Entry x:Name="UsernameEntry"
+                       Placeholder="Korisničko ime"
+                       Text="{Binding Username}"
+                       ReturnType="Next"
+                       Completed="OnUsernameCompleted"
+                       SemanticProperties.Description="Korisničko ime" />
 
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="{StaticResource ScoreLow}"
-                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+                <!-- Password + show/hide toggle -->
+                <Grid ColumnDefinitions="*,Auto" BackgroundColor="{StaticResource CardBackground}">
+                    <Entry x:Name="PasswordEntry"
+                           Grid.Column="0"
+                           Placeholder="Lozinka"
+                           IsPassword="True"
+                           Text="{Binding Password}"
+                           ReturnType="Done"
+                           ReturnCommand="{Binding LoginCommand}"
+                           SemanticProperties.Description="Lozinka" />
+                    <Button x:Name="PasswordToggle"
+                            Grid.Column="1"
+                            Style="{StaticResource IconButton}"
+                            Text="{StaticResource IconVisibility}"
+                            Clicked="OnTogglePasswordClicked"
+                            SemanticProperties.Description="Prikaži lozinku" />
+                </Grid>
 
-            <Button Text="Prijava"
-                    Command="{Binding LoginCommand}"
-                    IsEnabled="{Binding IsNotBusy}" />
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource DangerText}"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center" />
+                <Grid Margin="0,6,0,0">
+                    <Button Text="Prijavi se"
+                            Command="{Binding LoginCommand}"
+                            IsEnabled="{Binding IsNotBusy}" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       Color="White"
+                                       HeightRequest="22"
+                                       WidthRequest="22"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                </Grid>
 
-            <Button Text="Nemaš nalog? Registruj se"
-                    Style="{StaticResource LinkButton}"
-                    Command="{Binding GoToRegisterCommand}" />
+                <Button Text="Nemaš nalog? Registruj se"
+                        Style="{StaticResource LinkButton}"
+                        Command="{Binding GoToRegisterCommand}" />
 
-            <Label Text="Demo admin nalog:  admin  /  admin123"
-                   FontSize="11"
-                   HorizontalOptions="Center"
-                   TextColor="{StaticResource Gray400}" />
+                <!-- Shown only in Debug builds (see code-behind) -->
+                <Label x:Name="DemoHint"
+                       Text="Demo admin nalog:  admin  /  admin123"
+                       IsVisible="False"
+                       HorizontalOptions="Center"
+                       Style="{StaticResource Caption}" />
 
-        </VerticalStackLayout>
-    </ScrollView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 
 </ContentPage>

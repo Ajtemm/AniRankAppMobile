@@ -6,7 +6,7 @@ namespace AniRankApp;
 
 public partial class AppShell : Shell
 {
-    private const string CommunityTitle = "👥  Zajednica";
+    private const string CommunityTitle = "Zajednica";
 
     private readonly AuthService _auth;
     private readonly DatabaseService _db;
@@ -25,7 +25,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("adminuserreviews", typeof(AdminUserReviewsView));
         Routing.RegisterRoute("reviews", typeof(MyReviewsView));
         Routing.RegisterRoute("userprofile", typeof(UserProfileView));
-        Routing.RegisterRoute("toplist", typeof(TopListView));
 
         // Session restore: if Preferences already hold a session -> go straight in.
         CurrentItem = _auth.IsLoggedIn ? ExploreItem : LoginItem;
@@ -38,21 +37,13 @@ public partial class AppShell : Shell
             _ = ValidateSessionAsync();
     }
 
-    /// <summary>Bound by the Admin item's IsVisible.</summary>
+    /// <summary>Bound by the Admin tab's IsVisible.</summary>
     public bool IsAdmin => _auth.IsAdmin;
 
-    /// <summary>Bound by the sidebar header/footer.</summary>
-    public bool IsLoggedIn => _auth.IsLoggedIn;
-    public string CurrentUsername => _auth.CurrentUsername;
-    public string CurrentRoleLabel => $"Uloga: {_auth.CurrentUserRole}";
-
-    /// <summary>Call after login/logout so the sidebar reflects the current session.</summary>
+    /// <summary>Call after login/logout so the tab bar reflects the current session.</summary>
     public void RefreshTabs()
     {
         OnPropertyChanged(nameof(IsAdmin));
-        OnPropertyChanged(nameof(IsLoggedIn));
-        OnPropertyChanged(nameof(CurrentUsername));
-        OnPropertyChanged(nameof(CurrentRoleLabel));
 
         if (AdminTab is not null)
             AdminTab.IsVisible = _auth.IsAdmin;
@@ -60,22 +51,15 @@ public partial class AppShell : Shell
         _ = RefreshCommunityBadgeAsync();
     }
 
-    private void OnTopListClicked(object? sender, EventArgs e)
+    /// <summary>Route of the last content tab, so "Otkaži" on the logout tab can return there.</summary>
+    public string LastTabRoute { get; private set; } = "explore";
+
+    protected override void OnNavigated(ShellNavigatedEventArgs args)
     {
-        FlyoutIsPresented = false;
-        _ = GoToAsync("toplist");
-    }
+        base.OnNavigated(args);
 
-    private async void OnLogoutClicked(object? sender, EventArgs e)
-    {
-        FlyoutIsPresented = false;
-
-        var confirm = await DisplayAlertAsync("Odjava", "Odjaviti se sa naloga?", "Odjava", "Otkaži");
-        if (!confirm) return;
-
-        _auth.Logout();
-        RefreshTabs();
-        await GoToAsync("//login");
+        if (MainTabs.CurrentItem is { } tab && tab != LogoutTab && !string.IsNullOrEmpty(tab.Route))
+            LastTabRoute = tab.Route;
     }
 
     /// <summary>Marks the Zajednica tab when somebody new started following the user.</summary>
@@ -99,7 +83,7 @@ public partial class AppShell : Shell
         }
     }
 
-    /// <summary>Shell tabs have no badge API - a marker in the title does the job.</summary>
+    /// <summary>Shell tabs have no badge API - a dot in the title does the job.</summary>
     public void SetCommunityBadge(bool hasNew)
     {
         if (CommunityTab is not null)

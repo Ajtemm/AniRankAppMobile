@@ -3,77 +3,57 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:AniRankApp.Views"
        x:Class="AniRankApp.AppShell"
-       Shell.FlyoutBehavior="Flyout"
-       Shell.FlyoutBackgroundColor="{StaticResource CardBackground}"
-       Shell.FlyoutWidth="270"
+       Shell.FlyoutBehavior="Disabled"
        Shell.BackgroundColor="{StaticResource PageBackground}"
        Shell.ForegroundColor="{StaticResource TextPrimary}"
        Shell.TitleColor="{StaticResource TextPrimary}"
-       Title="AniRankApp">
+       Shell.TabBarBackgroundColor="{StaticResource CardBackground}"
+       Shell.TabBarForegroundColor="{StaticResource PrimaryAccent}"
+       Shell.TabBarTitleColor="{StaticResource PrimaryAccent}"
+       Shell.TabBarUnselectedColor="{StaticResource Gray400}"
+       Shell.UnselectedColor="{StaticResource Gray400}"
+       Title="AniRank">
 
-    <!-- ============ SIDEBAR HEADER: branding + logged-in user ============ -->
-    <Shell.FlyoutHeader>
-        <VerticalStackLayout Padding="24,56,24,22"
-                              Spacing="4"
-                              BackgroundColor="{StaticResource PageBackground}">
-            <Label Text="AniRank"
-                   FontSize="26"
-                   FontAttributes="Bold"
-                   TextColor="{StaticResource PrimaryAccent}" />
-            <Label Text="{Binding CurrentUsername}"
-                   FontSize="15"
-                   TextColor="{StaticResource TextPrimary}"
-                   IsVisible="{Binding IsLoggedIn}" />
-            <Label Text="{Binding CurrentRoleLabel}"
-                   Style="{StaticResource Caption}"
-                   IsVisible="{Binding IsLoggedIn}" />
-        </VerticalStackLayout>
-    </Shell.FlyoutHeader>
-
-    <!-- ============ AUTH (hidden from the sidebar) ============ -->
+    <!-- ============ AUTH (no tab bar) ============ -->
     <ShellContent x:Name="LoginItem"
                   Route="login"
-                  FlyoutItemIsVisible="False"
+                  Shell.TabBarIsVisible="False"
                   ContentTemplate="{DataTemplate views:LoginView}" />
 
     <ShellContent x:Name="RegisterItem"
                   Route="register"
-                  FlyoutItemIsVisible="False"
+                  Shell.TabBarIsVisible="False"
                   ContentTemplate="{DataTemplate views:RegisterView}" />
 
-    <!-- ============ MAIN SIDEBAR NAVIGATION ============ -->
-    <FlyoutItem x:Name="ExploreItem" Title="🔍  Istraži" Route="explore">
-        <ShellContent ContentTemplate="{DataTemplate views:ExploreView}" />
-    </FlyoutItem>
+    <!-- ============ MAIN NAVIGATION: bottom tabs on Android, top tabs on Windows ============ -->
+    <TabBar x:Name="MainTabs">
 
-    <FlyoutItem x:Name="CommunityTab" Title="👥  Zajednica" Route="community">
-        <ShellContent ContentTemplate="{DataTemplate views:CommunityView}" />
-    </FlyoutItem>
+        <Tab x:Name="ExploreItem" Title="Istraži" Route="explore" Icon="{StaticResource TabIconExplore}">
+            <ShellContent ContentTemplate="{DataTemplate views:ExploreView}" />
+        </Tab>
 
-    <FlyoutItem Title="👤  Profil" Route="profile">
-        <ShellContent ContentTemplate="{DataTemplate views:ProfileView}" />
-    </FlyoutItem>
+        <Tab x:Name="CommunityTab" Title="Zajednica" Route="community" Icon="{StaticResource TabIconCommunity}">
+            <ShellContent ContentTemplate="{DataTemplate views:CommunityView}" />
+        </Tab>
 
-    <!-- Visible only for the Admin role -->
-    <FlyoutItem x:Name="AdminTab" Title="🛠  Admin" Route="admin" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate views:AdminView}" />
-    </FlyoutItem>
+        <Tab Title="Top lista" Route="toplist" Icon="{StaticResource TabIconTop}">
+            <ShellContent ContentTemplate="{DataTemplate views:TopListView}" />
+        </Tab>
 
-    <!-- ============ SIDEBAR FOOTER: quick actions ============ -->
-    <Shell.FlyoutFooter>
-        <VerticalStackLayout Padding="16,10,16,24"
-                              Spacing="10"
-                              BackgroundColor="{StaticResource PageBackground}">
-            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,0,0,4" />
-            <Button Text="🏆  Top lista"
-                    Style="{StaticResource SubtleButton}"
-                    Clicked="OnTopListClicked" />
-            <Button Text="Odjava"
-                    Style="{StaticResource DangerButton}"
-                    HeightRequest="44"
-                    IsVisible="{Binding IsLoggedIn}"
-                    Clicked="OnLogoutClicked" />
-        </VerticalStackLayout>
-    </Shell.FlyoutFooter>
+        <Tab Title="Profil" Route="profile" Icon="{StaticResource TabIconProfile}">
+            <ShellContent ContentTemplate="{DataTemplate views:ProfileView}" />
+        </Tab>
+
+        <!-- Visible only for the Admin role -->
+        <Tab x:Name="AdminTab" Title="Admin" Route="admin" Icon="{StaticResource TabIconAdmin}" IsVisible="{Binding IsAdmin}">
+            <ShellContent ContentTemplate="{DataTemplate views:AdminView}" />
+        </Tab>
+
+        <!-- Confirmation page instead of an action tab: cancelling tab navigation is not reliable on Windows -->
+        <Tab x:Name="LogoutTab" Title="Odjava" Route="logout" Icon="{StaticResource TabIconLogout}">
+            <ShellContent ContentTemplate="{DataTemplate views:LogoutView}" />
+        </Tab>
+
+    </TabBar>
 
 </Shell>

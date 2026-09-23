@@ -3,82 +3,103 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
              xmlns:model="clr-namespace:AniRankApp.Models"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
              x:Class="AniRankApp.Views.AdminView"
              x:DataType="vm:AdminViewModel"
-             Title="Admin Panel">
+             Shell.NavBarIsVisible="False"
+             Title="Admin">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16,12,16,0" RowSpacing="10" MaximumWidthRequest="960">
 
-        <Label Grid.Row="0" Text="Administracija" Style="{StaticResource SectionTitle}" />
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+            <VerticalStackLayout Grid.Column="0" Spacing="0">
+                <Label Text="Administracija" Style="{StaticResource Hero}" SemanticProperties.HeadingLevel="Level1" />
+                <Label Text="Korisnici, banovi i recenzije" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1"
+                    Text="Sve recenzije"
+                    Style="{StaticResource SubtleButton}"
+                    HeightRequest="38"
+                    FontSize="13"
+                    VerticalOptions="End"
+                    Command="{Binding OpenAllReviewsCommand}" />
+        </Grid>
 
-        <Button Grid.Row="1"
-                Text="Sve recenzije u sistemu"
-                Style="{StaticResource SubtleButton}"
-                Command="{Binding OpenAllReviewsCommand}" />
-
-        <Border Grid.Row="2" Style="{StaticResource FilterCardStyle}">
+        <!-- ===== Add user (collapsed by default; admins rarely need it) ===== -->
+        <Border Grid.Row="1" Style="{StaticResource FilterCardStyle}" Padding="14,4">
             <VerticalStackLayout Spacing="8">
-                <Label Text="Dodaj korisnika ručno" Style="{StaticResource SectionTitle}" FontSize="15" />
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="0,8">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAddUserHeaderTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label Grid.Column="0" Style="{StaticResource Icon}" Text="{StaticResource IconPersonAdd}" TextColor="{StaticResource PrimaryAccent}" />
+                    <Label Grid.Column="1" Text="Dodaj korisnika ručno" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                    <Label x:Name="AddUserChevron" Grid.Column="2" Style="{StaticResource Icon}" Text="{StaticResource IconDropDown}" />
+                </Grid>
 
-                <Entry Placeholder="Korisničko ime" Text="{Binding NewUsername}" />
-                <Entry Placeholder="Email" Keyboard="Email" Text="{Binding NewEmail}" />
-                <Entry Placeholder="Lozinka (min. 6 karaktera)" IsPassword="True" Text="{Binding NewPassword}" />
+                <VerticalStackLayout x:Name="AddUserForm" Spacing="8" IsVisible="False" Padding="0,0,0,12">
+                    <Entry Placeholder="Korisničko ime" Text="{Binding NewUsername}" />
+                    <Entry Placeholder="Email" Keyboard="Email" Text="{Binding NewEmail}" />
+                    <Entry Placeholder="Lozinka (min. 6 karaktera)" IsPassword="True" Text="{Binding NewPassword}" />
 
-                <HorizontalStackLayout Spacing="8">
-                    <Switch IsToggled="{Binding NewUserIsAdmin}" />
-                    <Label Text="Admin nalog" VerticalOptions="Center" />
-                </HorizontalStackLayout>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Admin nalog" VerticalOptions="Center" />
+                        <Switch Grid.Column="1" IsToggled="{Binding NewUserIsAdmin}" />
+                    </Grid>
 
-                <Label Text="{Binding AddUserMessage}"
-                       TextColor="{StaticResource ScoreHigh}"
-                       IsVisible="{Binding AddUserMessage, Converter={StaticResource NotEmpty}}" />
+                    <Label Text="{Binding AddUserMessage}"
+                           TextColor="{StaticResource ScoreHigh}"
+                           IsVisible="{Binding AddUserMessage, Converter={StaticResource NotEmpty}}" />
 
-                <Button Text="Dodaj korisnika"
-                        Command="{Binding AddUserCommand}"
-                        IsEnabled="{Binding IsNotBusy}" />
+                    <Button Text="Dodaj korisnika"
+                            Command="{Binding AddUserCommand}"
+                            IsEnabled="{Binding IsNotBusy}" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </Border>
 
-        <SearchBar Grid.Row="3"
+        <SearchBar Grid.Row="2"
                    Placeholder="Pretraži korisnike (ime ili email)..."
                    Text="{Binding UserSearch}" />
 
-        <Label Grid.Row="4"
-               Text="{Binding ErrorMessage}"
-               TextColor="{StaticResource ScoreLow}"
-               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+        <CollectionView Grid.Row="4" ItemsSource="{Binding Users}">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
 
-        <CollectionView Grid.Row="5" ItemsSource="{Binding Users}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="model:User">
                     <Border Style="{StaticResource ReviewCardStyle}">
-                        <VerticalStackLayout Spacing="8">
+                        <VerticalStackLayout Spacing="12">
 
-                            <Grid ColumnDefinitions="*,Auto">
-                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Grid.Column="0" Style="{StaticResource AvatarStyle}">
+                                    <Label Style="{StaticResource AvatarLabelStyle}"
+                                           Text="{Binding Username, Converter={StaticResource Initials}}" />
+                                </Border>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                     <HorizontalStackLayout Spacing="8">
-                                        <Label Text="{Binding Username}" FontAttributes="Bold" FontSize="15" />
+                                        <Label Text="{Binding Username}" Style="{StaticResource CardTitle}" />
                                         <Border Style="{StaticResource BanBadgeStyle}" IsVisible="{Binding IsBanned}">
                                             <Label Style="{StaticResource BanBadgeLabelStyle}" Text="BANOVAN" />
                                         </Border>
                                     </HorizontalStackLayout>
-                                    <Label Text="{Binding Email}" Style="{StaticResource Caption}" />
-                                    <Label Text="{Binding CreatedAtText, StringFormat='Registrovan: {0}'}" Style="{StaticResource Caption}" />
+                                    <Label Text="{Binding Email}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding CreatedAtText, StringFormat='Registrovan: {0}'}" Style="{StaticResource Caption}" FontSize="12" />
                                 </VerticalStackLayout>
 
-                                <Label Grid.Column="1"
-                                       Text="{Binding Role}"
-                                       VerticalOptions="Center"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource PrimaryAccent}" />
+                                <Border Grid.Column="2" Style="{StaticResource StatusBadgeStyle}" VerticalOptions="Start">
+                                    <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="{Binding Role}" />
+                                </Border>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                 <Button Grid.Column="0"
-                                        Text="Pogledaj recenzije"
+                                        Text="Recenzije"
                                         Style="{StaticResource SubtleButton}"
-                                        HeightRequest="38"
-                                        FontSize="12"
+                                        HeightRequest="40"
+                                        FontSize="13"
                                         Clicked="OnOpenUserReviewsClicked" />
                                 <Button Grid.Column="1"
                                         Text="{Binding BanActionText}"
@@ -95,16 +116,18 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
             <CollectionView.EmptyView>
-                <Label Text="Nema korisnika za dati pojam pretrage."
-                       Style="{StaticResource Caption}" Margin="0,20" HorizontalOptions="Center" />
+                <controls:EmptyState Glyph="{StaticResource IconSearchOff}"
+                                     Message="Nema korisnika za dati pojam pretrage." />
             </CollectionView.EmptyView>
         </CollectionView>
 
-        <ActivityIndicator Grid.Row="5"
+        <ActivityIndicator Grid.Row="4"
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}"
                            VerticalOptions="Center"
                            HorizontalOptions="Center" />
+
+        <controls:ErrorBanner Grid.Row="0" Grid.RowSpan="5" Margin="-4,0,-4,12" Message="{Binding ErrorMessage}" />
 
     </Grid>
 

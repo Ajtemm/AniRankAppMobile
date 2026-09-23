@@ -2,21 +2,70 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- ============ DARK PALETTE (overrides / extends the template palette) ============ -->
-    <Color x:Key="PrimaryAccent">#9C86F0</Color>
+    <!-- ============ DARK PALETTE (overrides / extends the template palette) ============
+         Colour rule: Primary = filled surfaces (buttons, selected chips) with white text on top;
+         PrimaryAccent = text, links and icons drawn on the dark background. -->
+    <Color x:Key="Primary">#5B3AE0</Color>
+    <Color x:Key="PrimaryAccent">#A08CF5</Color>
+    <Color x:Key="PrimarySoft">#2A2445</Color>
     <Color x:Key="PrimaryDark">#3A1D9E</Color>
     <Color x:Key="PageBackground">#121216</Color>
     <Color x:Key="CardBackground">#1C1C24</Color>
     <Color x:Key="CardBackgroundAlt">#262631</Color>
     <Color x:Key="TextPrimary">#ECECF1</Color>
-    <Color x:Key="TextSecondary">#9A9AA6</Color>
+    <Color x:Key="TextSecondary">#A0A0AC</Color>
     <Color x:Key="Gray300">#34343E</Color>
     <Color x:Key="Gray400">#8A8A96</Color>
     <Color x:Key="Gray500">#6E6E7A</Color>
     <Color x:Key="FieldFocus">#26262F</Color>
+    <Color x:Key="Skeleton">#2A2A35</Color>
     <Color x:Key="ScoreHigh">#3FB950</Color>
     <Color x:Key="ScoreMid">#E3B341</Color>
     <Color x:Key="ScoreLow">#F85149</Color>
+    <!-- Text drawn on top of a score colour: dark, because white on green/yellow fails contrast -->
+    <Color x:Key="OnScore">#0E0E12</Color>
+    <Color x:Key="DangerText">#FF7B72</Color>
+    <Color x:Key="ErrorSurface">#3A1E22</Color>
+    <Color x:Key="WarningSurface">#362E1B</Color>
+
+    <!-- ============ ICON GLYPHS (Material Icons Round, font alias "Icons") ============ -->
+    <x:String x:Key="IconSearch">&#xe8b6;</x:String>
+    <x:String x:Key="IconExplore">&#xe87a;</x:String>
+    <x:String x:Key="IconGroups">&#xf233;</x:String>
+    <x:String x:Key="IconTrophy">&#xea23;</x:String>
+    <x:String x:Key="IconPerson">&#xe7fd;</x:String>
+    <x:String x:Key="IconAdmin">&#xef3d;</x:String>
+    <x:String x:Key="IconStar">&#xe838;</x:String>
+    <x:String x:Key="IconVisibility">&#xe8f4;</x:String>
+    <x:String x:Key="IconVisibilityOff">&#xe8f5;</x:String>
+    <x:String x:Key="IconLogout">&#xe9ba;</x:String>
+    <x:String x:Key="IconReset">&#xf053;</x:String>
+    <x:String x:Key="IconDropDown">&#xe5c5;</x:String>
+    <x:String x:Key="IconClose">&#xe5cd;</x:String>
+    <x:String x:Key="IconEdit">&#xe3c9;</x:String>
+    <x:String x:Key="IconAdd">&#xe145;</x:String>
+    <x:String x:Key="IconHeart">&#xe87d;</x:String>
+    <x:String x:Key="IconHeartOutline">&#xe87e;</x:String>
+    <x:String x:Key="IconError">&#xe001;</x:String>
+    <x:String x:Key="IconOffline">&#xe648;</x:String>
+    <x:String x:Key="IconChevron">&#xe5cc;</x:String>
+    <x:String x:Key="IconLock">&#xe897;</x:String>
+    <x:String x:Key="IconPersonAdd">&#xe7fe;</x:String>
+    <x:String x:Key="IconDelete">&#xe872;</x:String>
+    <x:String x:Key="IconPlaylistAdd">&#xe03b;</x:String>
+    <x:String x:Key="IconLeaderboard">&#xf20c;</x:String>
+    <x:String x:Key="IconInbox">&#xe156;</x:String>
+    <x:String x:Key="IconSearchOff">&#xea76;</x:String>
+    <x:String x:Key="IconReview">&#xe560;</x:String>
+    <x:String x:Key="IconInfo">&#xe88e;</x:String>
+
+    <!-- Tab bar icons -->
+    <FontImageSource x:Key="TabIconExplore" FontFamily="Icons" Glyph="&#xe87a;" Size="24" Color="#ECECF1" />
+    <FontImageSource x:Key="TabIconCommunity" FontFamily="Icons" Glyph="&#xf233;" Size="24" Color="#ECECF1" />
+    <FontImageSource x:Key="TabIconTop" FontFamily="Icons" Glyph="&#xea23;" Size="24" Color="#ECECF1" />
+    <FontImageSource x:Key="TabIconProfile" FontFamily="Icons" Glyph="&#xe7fd;" Size="24" Color="#ECECF1" />
+    <FontImageSource x:Key="TabIconAdmin" FontFamily="Icons" Glyph="&#xef3d;" Size="24" Color="#ECECF1" />
+    <FontImageSource x:Key="TabIconLogout" FontFamily="Icons" Glyph="&#xe9ba;" Size="24" Color="#ECECF1" />
 
     <!-- ============ IMPLICIT STYLE OVERRIDES ============ -->
 
@@ -27,23 +76,40 @@
 
     <Style TargetType="Label">
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
         <Setter Property="FontSize" Value="14" />
     </Style>
 
     <Style TargetType="Button">
         <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
         <Setter Property="TextColor" Value="#FFFFFF" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="HeightRequest" Value="46" />
-        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="Opacity" Value="0.5" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="PointerOver" />
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
     </Style>
 
     <Style TargetType="Entry">
         <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="PlaceholderColor" Value="{StaticResource Gray400}" />
-        <Setter Property="HeightRequest" Value="46" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="HeightRequest" Value="48" />
         <!-- Property Trigger: subtle highlight while typing -->
         <Style.Triggers>
             <Trigger TargetType="Entry" Property="IsFocused" Value="True">
@@ -56,13 +122,16 @@
         <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="PlaceholderColor" Value="{StaticResource Gray400}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="15" />
     </Style>
 
     <Style TargetType="Picker">
         <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="TitleColor" Value="{StaticResource Gray400}" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="14" />
         <Setter Property="HeightRequest" Value="44" />
     </Style>
 
@@ -71,19 +140,73 @@
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="PlaceholderColor" Value="{StaticResource Gray400}" />
         <Setter Property="CancelButtonColor" Value="{StaticResource PrimaryAccent}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="15" />
+    </Style>
+
+    <Style TargetType="Switch">
+        <Setter Property="OnColor" Value="{StaticResource Primary}" />
+        <Setter Property="ThumbColor" Value="#FFFFFF" />
     </Style>
 
     <Style TargetType="ActivityIndicator">
         <Setter Property="Color" Value="{StaticResource PrimaryAccent}" />
     </Style>
 
-    <!-- ============ NAMED STYLES ============ -->
+    <Style TargetType="RefreshView">
+        <Setter Property="RefreshColor" Value="{StaticResource PrimaryAccent}" />
+    </Style>
+
+    <!-- ============ TYPOGRAPHY ============ -->
+
+    <Style x:Key="Hero" TargetType="Label">
+        <Setter Property="FontFamily" Value="PoppinsBold" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <Style x:Key="SectionTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="PoppinsSemibold" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <Style x:Key="CardTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="PoppinsSemibold" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="LineHeight" Value="1.1" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <Style x:Key="Caption" TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+    </Style>
+
+    <Style x:Key="Body" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineHeight" Value="1.3" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <!-- A Material icon drawn as text; set Text to one of the Icon* glyphs above -->
+    <Style x:Key="Icon" TargetType="Label">
+        <Setter Property="FontFamily" Value="Icons" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+    </Style>
+
+    <!-- ============ BUTTONS ============ -->
 
     <Style x:Key="LinkButton" TargetType="Button">
         <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderWidth" Value="0" />
         <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
-        <Setter Property="FontAttributes" Value="None" />
-        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="HeightRequest" Value="44" />
     </Style>
 
     <Style x:Key="SubtleButton" TargetType="Button">
@@ -91,28 +214,34 @@
         <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
     </Style>
 
+    <!-- Destructive but low-emphasis: red text on a neutral surface (white on red fails contrast) -->
     <Style x:Key="DangerButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource ScoreLow}" />
-        <Setter Property="TextColor" Value="#FFFFFF" />
-        <Setter Property="HeightRequest" Value="38" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="TextColor" Value="{StaticResource DangerText}" />
+        <Setter Property="BorderColor" Value="{StaticResource Gray300}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="FontSize" Value="13" />
     </Style>
 
-    <Style x:Key="SectionTitle" TargetType="Label">
-        <Setter Property="FontSize" Value="18" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    <Style x:Key="BanButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="TextColor" Value="{StaticResource ScoreMid}" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="FontSize" Value="13" />
     </Style>
 
-    <Style x:Key="Caption" TargetType="Label">
-        <Setter Property="FontSize" Value="12" />
+    <!-- Round icon-only button (password eye, close...) -->
+    <Style x:Key="IconButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderWidth" Value="0" />
         <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
-    </Style>
-
-    <Style x:Key="Hero" TargetType="Label">
-        <Setter Property="FontSize" Value="30" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
+        <Setter Property="FontFamily" Value="Icons" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="WidthRequest" Value="44" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="CornerRadius" Value="22" />
     </Style>
 
     <!-- ============ SURFACES ============ -->
@@ -121,7 +250,7 @@
         <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
         <Setter Property="Stroke" Value="{StaticResource Gray300}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Padding" Value="12" />
+        <Setter Property="Padding" Value="14" />
         <Setter Property="StrokeShape">
             <RoundRectangle CornerRadius="14" />
         </Setter>
@@ -132,32 +261,78 @@
         <Setter Property="Stroke" Value="{StaticResource Gray300}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="Padding" Value="10" />
-        <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="StrokeShape">
             <RoundRectangle CornerRadius="16" />
         </Setter>
-        <Setter Property="Shadow">
-            <Shadow Brush="Black" Opacity="0.35" Radius="10" Offset="0,4" />
-        </Setter>
     </Style>
 
+    <!-- List spacing comes from LinearItemsLayout.ItemSpacing: a template root's Margin is ignored on Windows -->
     <Style x:Key="ReviewCardStyle" TargetType="Border">
         <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
         <Setter Property="Stroke" Value="{StaticResource Gray300}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Padding" Value="12" />
-        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="Padding" Value="14" />
         <Setter Property="StrokeShape">
-            <RoundRectangle CornerRadius="12" />
+            <RoundRectangle CornerRadius="14" />
         </Setter>
     </Style>
 
     <Style x:Key="PosterClip" TargetType="Border">
         <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="Padding" Value="0" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Skeleton}" />
         <Setter Property="StrokeShape">
             <RoundRectangle CornerRadius="10" />
         </Setter>
+    </Style>
+
+    <!-- Circle with the user's initials -->
+    <Style x:Key="AvatarStyle" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="WidthRequest" Value="44" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="Background">
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#7C5CFF" Offset="0" />
+                <GradientStop Color="#C04FD8" Offset="1" />
+            </LinearGradientBrush>
+        </Setter>
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="22" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="AvatarLabelStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="PoppinsSemibold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="#FFFFFF" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <!-- One of the "big number + caption" tiles on a profile -->
+    <Style x:Key="StatTileStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="8,12" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="12" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="StatValueStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="PoppinsBold" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <Style x:Key="StatCaptionStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
     </Style>
 
     <!-- ============ SCORE BADGE - DataTrigger changes the background colour ============
@@ -167,7 +342,8 @@
         <Setter Property="Padding" Value="8,3" />
         <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="HorizontalOptions" Value="Start" />
-        <Setter Property="BackgroundColor" Value="{StaticResource Gray500}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="BackgroundColor" Value="{StaticResource TextSecondary}" />
         <Setter Property="StrokeShape">
             <RoundRectangle CornerRadius="8" />
         </Setter>
@@ -185,9 +361,9 @@
     </Style>
 
     <Style x:Key="ScoreBadgeLabelStyle" TargetType="Label">
-        <Setter Property="TextColor" Value="#FFFFFF" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{StaticResource OnScore}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="13" />
     </Style>
 
     <!-- Neutral pill used for the watch-status badge -->
@@ -195,8 +371,9 @@
         <Setter Property="Padding" Value="8,3" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="Stroke" Value="{StaticResource PrimaryAccent}" />
-        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource PrimarySoft}" />
         <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="StrokeShape">
             <RoundRectangle CornerRadius="8" />
         </Setter>
@@ -204,45 +381,63 @@
 
     <Style x:Key="StatusBadgeLabelStyle" TargetType="Label">
         <Setter Property="TextColor" Value="{StaticResource PrimaryAccent}" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="12" />
     </Style>
 
-    <!-- Banned-user badge -->
+    <!-- Banned-user / private-profile badge -->
     <Style x:Key="BanBadgeStyle" TargetType="Border">
         <Setter Property="Padding" Value="8,3" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{StaticResource ScoreLow}" />
-        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+        <Setter Property="Stroke" Value="{StaticResource DangerText}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource ErrorSurface}" />
         <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="StrokeShape">
             <RoundRectangle CornerRadius="8" />
         </Setter>
     </Style>
 
     <Style x:Key="BanBadgeLabelStyle" TargetType="Label">
-        <Setter Property="TextColor" Value="{StaticResource ScoreLow}" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="FontSize" Value="11" />
-    </Style>
-
-    <Style x:Key="BanButtonStyle" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
-        <Setter Property="TextColor" Value="{StaticResource ScoreMid}" />
-        <Setter Property="HeightRequest" Value="38" />
+        <Setter Property="TextColor" Value="{StaticResource DangerText}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
         <Setter Property="FontSize" Value="12" />
     </Style>
 
     <!-- Base look for a filter chip (selected state handled by VisualStateManager in the template) -->
     <Style x:Key="FilterChipStyle" TargetType="Border">
-        <Setter Property="Padding" Value="12,6" />
-        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="Padding" Value="14,7" />
+        <Setter Property="Margin" Value="0,0,8,0" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="Stroke" Value="{StaticResource Gray300}" />
         <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
         <Setter Property="StrokeShape">
-            <RoundRectangle CornerRadius="16" />
+            <RoundRectangle CornerRadius="18" />
         </Setter>
+    </Style>
+
+    <Style x:Key="ChipLabelStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <!-- Dropdown pill on Explore (tap opens an action sheet); accent border once it's not the default -->
+    <Style x:Key="PillStyle" TargetType="Border">
+        <Setter Property="Padding" Value="12,0,6,0" />
+        <Setter Property="HeightRequest" Value="38" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{StaticResource Gray300}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="19" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="PillActiveStyle" TargetType="Border" BasedOn="{StaticResource PillStyle}">
+        <Setter Property="Stroke" Value="{StaticResource PrimaryAccent}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource PrimarySoft}" />
     </Style>
 
 </ResourceDictionary>

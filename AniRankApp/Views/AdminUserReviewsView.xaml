@@ -8,62 +8,63 @@
              x:DataType="vm:AdminUserReviewsViewModel"
              Title="{Binding Title}">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="12,10" RowSpacing="8">
+    <Grid RowDefinitions="Auto,*" Padding="16,10,16,0" RowSpacing="10" MaximumWidthRequest="960">
 
         <Label Grid.Row="0" Text="{Binding HeaderText}" Style="{StaticResource SectionTitle}" />
 
-        <Label Grid.Row="1"
-               Text="{Binding ErrorMessage}"
-               TextColor="{StaticResource ScoreLow}"
-               IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Reviews}">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
 
-        <CollectionView Grid.Row="2" ItemsSource="{Binding Reviews}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="model:Review">
                     <Border Style="{StaticResource ReviewCardStyle}">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                             <VerticalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
-                                <Label Text="{Binding AnimeTitle}" FontAttributes="Bold" />
+                                <Label Text="{Binding AnimeTitle}" Style="{StaticResource CardTitle}" />
                                 <Label Text="{Binding Username, StringFormat='Autor: {0}'}" Style="{StaticResource Caption}" />
 
-                                <HorizontalStackLayout Spacing="8">
-                                    <Border Style="{StaticResource ScoreBadgeStyle}" IsVisible="{Binding HasRating}">
-                                        <Label Style="{StaticResource ScoreBadgeLabelStyle}"
-                                               Text="{Binding Rating, StringFormat='Ocena: {0:0.0}/10'}" />
+                                <FlexLayout Wrap="Wrap">
+                                    <Border Style="{StaticResource ScoreBadgeStyle}" IsVisible="{Binding HasRating}" Margin="0,0,6,4">
+                                        <Label Style="{StaticResource ScoreBadgeLabelStyle}" Text="{Binding RatingText}" />
                                     </Border>
-                                    <Border Style="{StaticResource StatusBadgeStyle}">
-                                        <Label Style="{StaticResource StatusBadgeLabelStyle}"
-                                               Text="{Binding StatusDisplay}" />
+                                    <Border Style="{StaticResource StatusBadgeStyle}" Margin="0,0,6,4">
+                                        <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="{Binding StatusDisplay}" />
                                     </Border>
-                                </HorizontalStackLayout>
+                                </FlexLayout>
 
                                 <Label Text="{Binding Comment}"
+                                       Style="{StaticResource Body}"
                                        MaxLines="3"
                                        LineBreakMode="TailTruncation"
                                        IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
-                                <Label Text="{Binding CreatedAtText}" Style="{StaticResource Caption}" />
+                                <Label Text="{Binding CreatedAtText}" Style="{StaticResource Caption}" FontSize="12" />
                             </VerticalStackLayout>
 
                             <Button Grid.Column="1"
-                                    Text="Obriši"
-                                    Style="{StaticResource DangerButton}"
-                                    VerticalOptions="Center"
+                                    Style="{StaticResource IconButton}"
+                                    Text="{StaticResource IconDelete}"
+                                    TextColor="{StaticResource DangerText}"
+                                    VerticalOptions="Start"
+                                    SemanticProperties.Description="{Binding AnimeTitle, StringFormat='Obriši recenziju za {0}'}"
                                     Clicked="OnDeleteReviewClicked" />
                         </Grid>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
             <CollectionView.EmptyView>
-                <Label Text="Nema recenzija."
-                       Style="{StaticResource Caption}" Margin="0,30" HorizontalOptions="Center" />
+                <controls:EmptyState Glyph="{StaticResource IconReview}" Message="Nema recenzija." />
             </CollectionView.EmptyView>
         </CollectionView>
 
-        <ActivityIndicator Grid.Row="2"
+        <ActivityIndicator Grid.Row="1"
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}"
                            VerticalOptions="Center"
                            HorizontalOptions="Center" />
+
+        <controls:ErrorBanner Grid.Row="0" Grid.RowSpan="2" Margin="-4,0,-4,12" Message="{Binding ErrorMessage}" />
 
     </Grid>
 

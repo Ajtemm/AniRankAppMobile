@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             x:Class="AniRankApp.Views.LogoutView"
+             x:DataType="vm:LogoutViewModel"
+             Shell.NavBarIsVisible="False"
+             Title="Odjava">
+
+    <Grid>
+        <Border Style="{StaticResource FilterCardStyle}"
+                Padding="24,28"
+                Margin="16"
+                MaximumWidthRequest="420"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="14">
+
+                <Border Style="{StaticResource AvatarStyle}" WidthRequest="72" HeightRequest="72" HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="36" />
+                    </Border.StrokeShape>
+                    <Label Style="{StaticResource AvatarLabelStyle}" FontSize="26"
+                           Text="{Binding Username, Converter={StaticResource Initials}}" />
+                </Border>
+
+                <Label Text="Odjava sa naloga"
+                       Style="{StaticResource SectionTitle}"
+                       HorizontalOptions="Center"
+                       SemanticProperties.HeadingLevel="Level1" />
+
+                <Label Text="{Binding Username, StringFormat='Prijavljen si kao {0}. Želiš li da se odjaviš?'}"
+                       Style="{StaticResource Caption}"
+                       HorizontalTextAlignment="Center" />
+
+                <Button Text="Odjavi se"
+                        Margin="0,8,0,0"
+                        Command="{Binding LogoutCommand}" />
+
+                <Button Text="Otkaži"
+                        Style="{StaticResource SubtleButton}"
+                        Command="{Binding CancelCommand}" />
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>

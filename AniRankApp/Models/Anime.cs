@@ -19,6 +19,10 @@ public class Anime
 
     public int? EpisodeCount { get; set; }
     public string Status { get; set; } = string.Empty;
+
+    /// <summary>Kitsu subtype: TV, movie, OVA, ONA, special, music.</summary>
+    public string Subtype { get; set; } = string.Empty;
+
     public int? PopularityRank { get; set; }
     public int? RatingRank { get; set; }
     public string StartDate { get; set; } = string.Empty;
@@ -28,7 +32,42 @@ public class Anime
     public string EpisodeText => EpisodeCount.HasValue ? $"{EpisodeCount} epizoda" : "Broj epizoda: nepoznato";
     public string PopularityText => PopularityRank.HasValue ? $"Popularnost #{PopularityRank}" : "Popularnost: -";
     public string RatingRankText => RatingRank.HasValue ? $"Rang ocene #{RatingRank}" : "Rang ocene: -";
-    public string StatusText => string.IsNullOrWhiteSpace(Status) ? "Status: nepoznato" : $"Status: {Status}";
+    public string StatusText => string.IsNullOrWhiteSpace(Status) ? "Status: nepoznato" : $"Status: {StatusDisplay}";
+
+    /// <summary>Kitsu status in Serbian ("finished" -> "Završeno").</summary>
+    public string StatusDisplay => Status switch
+    {
+        "current" => "U toku",
+        "finished" => "Završeno",
+        "upcoming" => "Najavljeno",
+        "unreleased" => "Neobjavljeno",
+        "tba" => "Uskoro",
+        _ => Status
+    };
+
+    public string SubtypeDisplay => Subtype switch
+    {
+        "TV" => "TV",
+        "movie" => "Film",
+        "OVA" => "OVA",
+        "ONA" => "ONA",
+        "special" => "Specijal",
+        "music" => "Muzički",
+        _ => Subtype
+    };
+
+    public string YearText => StartDate.Length >= 4 ? StartDate[..4] : string.Empty;
+
+    /// <summary>One compact line for cards: "TV · 2023 · 24 ep · Završeno".</summary>
+    public string MetaText => string.Join("  ·  ", new[]
+    {
+        SubtypeDisplay,
+        YearText,
+        EpisodeCount is > 0 ? $"{EpisodeCount} ep" : string.Empty,
+        StatusDisplay
+    }.Where(p => !string.IsNullOrWhiteSpace(p)));
+
+    public bool HasPopularity => PopularityRank.HasValue;
 
     /// <summary>Drives the DataTrigger colour of the score badge.</summary>
     public string RatingTier => AverageRating >= 8 ? "High" : AverageRating >= 5 ? "Medium" : "Low";
@@ -55,6 +94,7 @@ public class Anime
             AverageRating = avg,
             EpisodeCount = a.EpisodeCount,
             Status = a.Status ?? string.Empty,
+            Subtype = a.Subtype ?? string.Empty,
             PopularityRank = a.PopularityRank,
             RatingRank = a.RatingRank,
             StartDate = a.StartDate ?? string.Empty

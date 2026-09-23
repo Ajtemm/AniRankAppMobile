@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
              xmlns:model="clr-namespace:AniRankApp.Models"
              xmlns:controls="clr-namespace:AniRankApp.Controls"
@@ -9,72 +8,55 @@
              x:DataType="vm:MyReviewsViewModel"
              Title="{Binding Title}">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Padding="12,10" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16,10,16,0" RowSpacing="8" MaximumWidthRequest="960">
 
-        <Label Grid.Row="0" Text="{Binding HeaderText}" Style="{StaticResource SectionTitle}" />
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <VerticalStackLayout Grid.Column="0" Spacing="0" VerticalOptions="Center">
+                <Label Text="{Binding HeaderText}" Style="{StaticResource SectionTitle}" />
+                <Label Text="{Binding Summary}"
+                       Style="{StaticResource Caption}"
+                       IsVisible="{Binding Summary, Converter={StaticResource NotEmpty}}" />
+            </VerticalStackLayout>
+            <Border Grid.Column="1"
+                    Style="{StaticResource PillStyle}"
+                    VerticalOptions="Center"
+                    SemanticProperties.Description="{Binding SortLabel, StringFormat='Sortiranje: {0}'}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding PickSortCommand}" />
+                </Border.GestureRecognizers>
+                <HorizontalStackLayout Spacing="2">
+                    <Label Style="{StaticResource Icon}" Text="{StaticResource IconLeaderboard}" FontSize="16" TextColor="{StaticResource PrimaryAccent}" Margin="0,0,4,0" />
+                    <Label Style="{StaticResource ChipLabelStyle}" Text="{Binding SortLabel}" TextColor="{StaticResource TextPrimary}" />
+                    <Label Style="{StaticResource Icon}" Text="{StaticResource IconDropDown}" />
+                </HorizontalStackLayout>
+            </Border>
+        </Grid>
 
         <!-- ===== Status filter chips ===== -->
-        <CollectionView Grid.Row="1"
-                        HeightRequest="46"
-                        ItemsSource="{Binding StatusFilters}"
-                        SelectedItem="{Binding SelectedStatusFilter}"
-                        SelectionMode="Single">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Horizontal" />
-            </CollectionView.ItemsLayout>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="sys:String">
-                    <Border Style="{StaticResource FilterChipStyle}">
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup x:Name="CommonStates">
-                                <VisualState x:Name="Normal" />
-                                <VisualState x:Name="Selected">
-                                    <VisualState.Setters>
-                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                        <Setter Property="Stroke" Value="{StaticResource Primary}" />
-                                        <Setter TargetName="ChipLabel" Property="Label.TextColor" Value="#FFFFFF" />
-                                    </VisualState.Setters>
-                                </VisualState>
-                            </VisualStateGroup>
-                        </VisualStateManager.VisualStateGroups>
+        <!-- Single-choice chips: one tap, no WinUI selection highlight -->
+        <controls:ChipGroup Grid.Row="1"
+                            ItemsSource="{Binding StatusFilters}"
+                            SelectedItem="{Binding SelectedStatusFilter}"
+                            Margin="0,0,0,-8" />
 
-                        <Label x:Name="ChipLabel"
-                               Text="{Binding .}"
-                               FontSize="12"
-                               FontAttributes="Bold"
-                               TextColor="{StaticResource TextSecondary}"
-                               VerticalOptions="Center" />
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+        <Border Grid.Row="2"
+                Style="{StaticResource FilterCardStyle}"
+                IsVisible="{Binding PrivacyNotice, Converter={StaticResource NotEmpty}}">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                <Label Grid.Column="0" Style="{StaticResource Icon}" Text="{StaticResource IconLock}" />
+                <Label Grid.Column="1" Text="{Binding PrivacyNotice}" VerticalOptions="Center" />
+            </Grid>
+        </Border>
 
-        <Picker Grid.Row="2"
-                Title="Sortiranje"
-                ItemsSource="{Binding SortOptions}"
-                SelectedIndex="{Binding SelectedSortIndex}" />
-
-        <Label Grid.Row="3"
-               Text="{Binding Summary}"
-               Style="{StaticResource Caption}"
-               IsVisible="{Binding Summary, Converter={StaticResource NotEmpty}}" />
-
-        <VerticalStackLayout Grid.Row="4" Spacing="4">
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="{StaticResource ScoreLow}"
-                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
-
-            <Border Style="{StaticResource FilterCardStyle}"
-                    IsVisible="{Binding PrivacyNotice, Converter={StaticResource NotEmpty}}">
-                <Label Text="{Binding PrivacyNotice}" />
-            </Border>
-        </VerticalStackLayout>
-
-        <RefreshView Grid.Row="5"
+        <RefreshView Grid.Row="4"
                      IsRefreshing="{Binding IsRefreshing}"
                      Command="{Binding LoadCommand}">
 
             <CollectionView ItemsSource="{Binding Reviews}">
+
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                </CollectionView.ItemsLayout>
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="model:Review">
@@ -90,45 +72,49 @@
                             </SwipeView.RightItems>
 
                             <Border Style="{StaticResource ReviewCardStyle}">
-                                <Grid ColumnDefinitions="80,*,Auto" ColumnSpacing="10">
+                                <Grid ColumnDefinitions="72,*,Auto" ColumnSpacing="12">
 
-                                    <Border Grid.Column="0" Style="{StaticResource PosterClip}">
+                                    <Border Grid.Column="0" Style="{StaticResource PosterClip}" VerticalOptions="Start">
                                         <Image Source="{Binding AnimeImageUrl}"
                                                Aspect="AspectFill"
-                                               HeightRequest="104"
-                                               WidthRequest="80" />
+                                               HeightRequest="100"
+                                               WidthRequest="72"
+                                               SemanticProperties.Description="{Binding AnimeTitle, StringFormat='Poster: {0}'}" />
                                     </Border>
 
                                     <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
-                                        <Label Text="{Binding AnimeTitle}" FontAttributes="Bold" FontSize="15" />
+                                        <Label Text="{Binding AnimeTitle}" Style="{StaticResource CardTitle}" MaxLines="2" LineBreakMode="TailTruncation" />
 
-                                        <HorizontalStackLayout Spacing="6">
-                                            <Border Style="{StaticResource StatusBadgeStyle}">
-                                                <Label Style="{StaticResource StatusBadgeLabelStyle}"
-                                                       Text="{Binding StatusDisplay}" />
+                                        <FlexLayout Wrap="Wrap">
+                                            <Border Style="{StaticResource StatusBadgeStyle}" Margin="0,0,6,4">
+                                                <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="{Binding StatusDisplay}" />
                                             </Border>
-                                            <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding HasProgress}">
-                                                <Label Style="{StaticResource StatusBadgeLabelStyle}"
-                                                       Text="{Binding ProgressText}" />
+                                            <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding HasProgress}" Margin="0,0,6,4">
+                                                <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="{Binding ProgressText}" />
                                             </Border>
-                                        </HorizontalStackLayout>
+                                        </FlexLayout>
 
+                                        <!-- Custom control: stars + score badge -->
                                         <controls:RatingBar RatingValue="{Binding Rating}" MaxRating="10" ShowStars="True"
                                                             IsVisible="{Binding HasRating}" />
                                         <Label Text="Bez ocene"
                                                Style="{StaticResource Caption}"
                                                IsVisible="{Binding HasRating, Converter={StaticResource Invert}}" />
                                         <Label Text="{Binding Comment}"
+                                               Style="{StaticResource Body}"
                                                MaxLines="3"
                                                LineBreakMode="TailTruncation"
                                                IsVisible="{Binding Comment, Converter={StaticResource NotEmpty}}" />
-                                        <Label Text="{Binding LastActivityText}" Style="{StaticResource Caption}" />
+                                        <Label Text="{Binding LastActivityText}" Style="{StaticResource Caption}" FontSize="12" />
                                     </VerticalStackLayout>
 
+                                    <!-- Icon button for mouse users (swipe is the touch shortcut) -->
                                     <Button Grid.Column="2"
-                                            Text="Obriši"
-                                            Style="{StaticResource DangerButton}"
-                                            VerticalOptions="Center"
+                                            Style="{StaticResource IconButton}"
+                                            Text="{StaticResource IconDelete}"
+                                            TextColor="{StaticResource DangerText}"
+                                            VerticalOptions="Start"
+                                            SemanticProperties.Description="{Binding AnimeTitle, StringFormat='Obriši recenziju za {0}'}"
                                             IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:MyReviewsViewModel}}, Path=CanDelete}"
                                             Clicked="OnDeleteClicked" />
                                 </Grid>
@@ -139,14 +125,15 @@
                 </CollectionView.ItemTemplate>
 
                 <CollectionView.EmptyView>
-                    <Label Text="Nema recenzija za izabrani filter."
-                           HorizontalOptions="Center"
-                           Margin="0,40"
-                           Style="{StaticResource Caption}" />
+                    <controls:EmptyState Glyph="{StaticResource IconPlaylistAdd}"
+                                         Title="Lista je prazna"
+                                         Message="Nema recenzija za izabrani filter." />
                 </CollectionView.EmptyView>
 
             </CollectionView>
         </RefreshView>
+
+        <controls:ErrorBanner Grid.Row="0" Grid.RowSpan="5" Margin="-4,0,-4,12" Message="{Binding ErrorMessage}" />
 
     </Grid>
 

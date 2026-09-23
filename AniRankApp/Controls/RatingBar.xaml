@@ -15,9 +15,8 @@
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
             <Label x:Name="ValueLabel"
-                   TextColor="White"
-                   FontSize="12"
-                   FontAttributes="Bold" />
+                   FontFamily="OpenSansSemibold"
+                   FontSize="13" />
         </Border>
 
     </HorizontalStackLayout>

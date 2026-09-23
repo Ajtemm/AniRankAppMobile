@@ -58,14 +58,19 @@ AniRankApp/
 │   ├── MyReviewsView / ProfileView / AdminView
 │   ├── CommunityView / UserProfileView / TopListView
 ├── Controls/
-│   └── RatingBar.xaml(.cs)   Custom ContentView sa BindableProperty (RatingValue, MaxRating, ShowStars)
-├── Converters/Converters.cs  NotEmptyBoolConverter, InvertedBoolConverter
-├── Helpers/                  PrefKeys, SecurityHelper (SHA-256), ServiceHelper (DI most), ToastHelper
+│   ├── RatingBar.xaml(.cs)   Custom ContentView sa BindableProperty (RatingValue, MaxRating, ShowStars)
+│   ├── RatingPicker.cs       Unos ocene tapom na 1–10 (two-way Value)
+│   ├── ChipGroup.cs          Čipovi sa jednim izborom (ItemsSource + two-way SelectedItem)
+│   ├── ErrorBanner.cs        Plutajuća poruka o grešci / offline stanju
+│   ├── EmptyState.cs         Prazno stanje liste (ikonica, poruka, dugme)
+│   └── SkeletonList.cs       Skeleton kartice pri prvom učitavanju
+├── Converters/Converters.cs  NotEmptyBoolConverter, InvertedBoolConverter, InitialsConverter
+├── Helpers/                  PrefKeys, SecurityHelper (SHA-256), ServiceHelper (DI most), ToastHelper, PasswordVisibility
 ├── Resources/Styles/
-│   ├── Colors.xaml           (iz šablona)
+│   ├── Colors.xaml           (iz šablona, usklađen Primary/OffBlack)
 │   ├── Styles.xaml           (iz šablona)
-│   └── CustomStyles.xaml     Stilovi kartica, Trigger + DataTrigger za bedž ocene
-├── AppShell.xaml(.cs)        Shell + TabBar (Istraži / Zajednica / Profil / Admin*)
+│   └── CustomStyles.xaml     Paleta, tipografija, ikonice, stilovi kartica, Trigger + DataTrigger za bedž ocene
+├── AppShell.xaml(.cs)        Shell + TabBar (Istraži / Zajednica / Top lista / Profil / Admin* / Odjava)
 ├── App.xaml(.cs)            Merge ResourceDictionary-ja, kreira AppShell
 └── MauiProgram.cs            DI registracija servisa, VM-ova i View-ova
 ```
@@ -76,16 +81,16 @@ AniRankApp/
 
 | # | Zahtev | Gde je implementirano |
 |---|--------|-----------------------|
-| 1 | **Shell + Tabbed navigacija** | `AppShell.xaml` — `Shell` sa `TabBar` i 4 `Tab` elementa; auth ekrani kao zasebni `ShellContent`. Admin tab ima `IsVisible="{Binding IsAdmin}"`. |
+| 1 | **Shell + Tabbed navigacija** | `AppShell.xaml` — `Shell` sa `TabBar` i 6 `Tab` elemenata sa ikonicama (`FontImageSource`); auth ekrani kao zasebni `ShellContent`. Admin tab ima `IsVisible="{Binding IsAdmin}"`. |
 | 2 | **MVVM + Data Binding + INotifyPropertyChanged / CommunityToolkit.Mvvm** | Svi `*ViewModel` nasleđuju `BaseViewModel : ObservableObject`; `[ObservableProperty]`, `[RelayCommand]`; View-ovi drže samo `BindingContext` + tanke event handler-e. |
 | 3 | **SQLite (sqlite-net-pcl)** | `DatabaseService` — `SQLiteAsyncConnection`, `CreateTableAsync<User>/<Review>/<Follow>`, sve tražene CRUD metode (`InsertReviewAsync`, `GetReviewsForAnimeAsync`, `GetUserReviewsAsync`, `GetAllReviewsAsync`, `DeleteReviewAsync`, `GetAllUsersAsync`, `DeleteUserAsync`). Seed admina pri prvom pokretanju. |
 | 4 | **Sesija u lokalne fajlove / Preferences** | `AuthService` čuva `CurrentUserId/Username/Role` u `Preferences`; `AppShell` pri startu čita sesiju i radi auto-login. SQLite baza (`anirank.db3`) je lokalni fajl u `FileSystem.AppDataDirectory`. |
 | 5 | **Async klijent-server (HttpClient)** | `KitsuApiService` — `HttpClient` + `GetFromJsonAsync`, `CancellationToken`, poziva `trending/anime`, `anime?filter[text]=`, `anime/{id}`. Sve I/O je `async/await`. |
-| 6 | **CollectionView + DataTemplate** | `ExploreView`, `MyReviewsView`, `AnimeDetailView` (lista recenzija), `AdminView` (2 liste) — svi koriste `CollectionView` sa `DataTemplate` i `EmptyView`. |
+| 6 | **CollectionView + DataTemplate** | `ExploreView` (`GridItemsLayout`), `MyReviewsView`, `CommunityView` (2 liste), `TopListView`, `AdminView`, `AdminUserReviewsView` — svi koriste `CollectionView` sa `DataTemplate` i `EmptyView` (`EmptyState`). Recenzije na `AnimeDetailView` koriste `BindableLayout` + `DataTemplate`. |
 | 7 | **Trigeri i Stilovi (ResourceDictionary)** | `Resources/Styles/CustomStyles.xaml` — `AnimeCardStyle`/`ReviewCardStyle` za kartice; `ScoreBadgeStyle` sa `DataTrigger` (zelena ≥8, žuta 5–7, crvena <5); property `Trigger` na `Entry` (fokus). |
-| 8 | **Custom kontrola (ContentView + BindableProperty)** | `Controls/RatingBar.xaml(.cs)` — `BindableProperty` `RatingValue`, `MaxRating`, `ShowStars`; korišćena u `CollectionView` stavkama i u formi za recenziju. |
+| 8 | **Custom kontrola (ContentView + BindableProperty)** | `Controls/RatingBar.xaml(.cs)` — `BindableProperty` `RatingValue`, `MaxRating`, `ShowStars`; korišćena u `CollectionView` stavkama. Uz nju: `RatingPicker` (two-way `Value`), `ChipGroup` (two-way `SelectedItem`), `ErrorBanner`, `EmptyState`, `SkeletonList`. |
 
-Dodatno: `ActivityIndicator` spinneri na svim ekranima koji učitavaju sa API-ja;
+Dodatno: skeleton kartice i `ActivityIndicator` spinneri pri učitavanju;
 `RefreshView` pull-to-refresh na listama.
 
 ---
@@ -94,11 +99,12 @@ Dodatno: `ActivityIndicator` spinneri na svim ekranima koji učitavaju sa API-ja
 
 - **LoginView / RegisterView** — validacija polja; posle prijave `GoToAsync("//explore")`,
   Admin dodatno dobija Admin tab.
-- **ExploreView** — `SearchBar` (Kitsu pretraga) + `CollectionView` kartica
-  (poster, naslov, popularnost, API ocena kroz `RatingBar` i obojeni bedž).
-- **AnimeDetailView** — banner + poster + synopsis + status/epizode; forma za
-  recenziju (`Slider` 1–10 + `RatingBar` preview + `Editor`); lista SQLite recenzija
-  ostalih korisnika.
+- **ExploreView** — `SearchBar` (Kitsu pretraga) + filter „pill"-ovi + `CollectionView`
+  kartica (poster, naslov, „TV · 2013 · 25 ep · Završeno", obojeni bedž Kitsu ocene);
+  na širokom prozoru mreža od 2–4 kolone.
+- **AnimeDetailView** — hero (cover sa gradijentom + poster), kartica „Moja lista",
+  opis sa „Prikaži više"; forma za recenziju u donjem panelu (čipovi za status,
+  `RatingPicker` 1–10, epizode, `Editor`); lista SQLite recenzija ostalih korisnika.
 - **MyReviewsView** — recenzije jednog profila (otvara se sa profila, ruta
   `reviews?userId=...&status=...`); brisanje samo na sopstvenoj listi.
 - **CommunityView** — pretraga ostalih korisnika, čipovi Svi / Pratim / Prate me,
@@ -106,8 +112,9 @@ Dodatno: `ActivityIndicator` spinneri na svim ekranima koji učitavaju sa API-ja
 - **UserProfileView** — javni profil drugog korisnika: brojači pratilaca, dugme za
   praćenje i raspodela po statusu koja vodi na njegove recenzije.
 - **ProfileView** — podaci o nalogu i ulozi, brojači pratilaca, klikabilna
-  raspodela po statusu (vodi na te recenzije); odjava.
+  raspodela po statusu (vodi na te recenzije).
 - **AdminView** (samo Admin) — pregled/brisanje svih korisnika i svih recenzija.
+- **LogoutView** (tab „Odjava") — potvrda odjave; „Otkaži" vraća na prethodni tab.
 
 ---
 
@@ -216,8 +223,8 @@ Dodatno: `ActivityIndicator` spinneri na svim ekranima koji učitavaju sa API-ja
 **Anime**
 - **Ocena zajednice** pored Kitsu ocene — prosek ocena datih *u ovoj aplikaciji*
   (`GetAnimeRatingStatsAsync`, `AVG` u SQL-u).
-- **Top lista zajednice** (`toplist`, dugme u tabu Zajednica): rang-lista animea po
-  lokalnim ocenama, sa filterom minimalnog broja ocena.
+- **Top lista zajednice** (tab `//toplist`): rang-lista animea po lokalnim ocenama,
+  sa filterom minimalnog broja ocena.
 - **Napredak po epizodama** (`Review.EpisodesWatched`): polje u formi (sakriveno za
   „Plan to Watch") i bedž „Odgledano: N ep." na karticama.
 - **Offline režim**: poslednja učitana strana se čuva u tabelu `CachedAnime`; bez
@@ -236,6 +243,25 @@ Dodatno: `ActivityIndicator` spinneri na svim ekranima koji učitavaju sa API-ja
 - **Toast umesto `DisplayAlert`** za potvrde (`Helpers/ToastHelper.cs` — native Android
   toast, bez dodatnog paketa).
 - **Debounce i na Explore pretrazi** (350 ms), isto kao na filterima.
+
+## UI/UX redizajn (v1.6)
+
+- **Navigacija**: umesto bočnog menija — `TabBar` sa Material ikonicama (dole na
+  Androidu, gore na Windowsu); Top lista je sopstveni tab; **Odjava** je poslednji tab
+  (`LogoutView` sa potvrdom „Odjavi se" / „Otkaži").
+- **Istraži**: filteri kao „pill" dugmad (action sheet, primenjuju se odmah), jedna
+  ocena po kartici umesto dve, kompaktan red sa podacima, mreža na širokom ekranu.
+- **Detalji**: hero zaglavlje, kartica „Moja lista" + donji panel sa formom, tap-ocena
+  1–10 (`RatingPicker`) i čipovi za status umesto `Slider`-a i `Picker`-a.
+- **Čitljivost**: tamni tekst na bedževima ocena (kontrast ≥ 7:1 umesto ~2:1), veći
+  `Caption`, `SemanticProperties` na posterima i ikonicama.
+- **Stanja**: skeleton kartice, plutajući `ErrorBanner` (ne pomera raspored), `EmptyState`
+  sa akcijom, toast na Windowsu bez modalnog „OK".
+- **Login/Registracija**: logo, prikaz/skrivanje lozinke, „Next" prelazi na sledeće
+  polje, demo admin nalog se prikazuje samo u Debug buildu.
+- **Brend**: nova ikonica, splash i logo; Poppins za naslove, OpenSans za tekst;
+  pravilo boja `Primary` (površine) / `PrimaryAccent` (tekst i ikonice).
+- **Profil**: avatar sa inicijalima i pločice sa brojevima.
 
 ## Napomene
 

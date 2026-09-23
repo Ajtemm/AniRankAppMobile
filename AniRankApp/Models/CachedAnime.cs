@@ -22,6 +22,7 @@ public class CachedAnime
     public double AverageRating { get; set; }
     public int EpisodeCount { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string Subtype { get; set; } = string.Empty;
     public int PopularityRank { get; set; }
     public int RatingRank { get; set; }
     public string StartDate { get; set; } = string.Empty;
@@ -38,6 +39,7 @@ public class CachedAnime
         AverageRating = a.AverageRating,
         EpisodeCount = a.EpisodeCount ?? 0,
         Status = a.Status,
+        Subtype = a.Subtype,
         PopularityRank = a.PopularityRank ?? 0,
         RatingRank = a.RatingRank ?? 0,
         StartDate = a.StartDate,
@@ -54,6 +56,7 @@ public class CachedAnime
         AverageRating = AverageRating,
         EpisodeCount = EpisodeCount > 0 ? EpisodeCount : null,
         Status = Status,
+        Subtype = Subtype,
         PopularityRank = PopularityRank > 0 ? PopularityRank : null,
         RatingRank = RatingRank > 0 ? RatingRank : null,
         StartDate = StartDate

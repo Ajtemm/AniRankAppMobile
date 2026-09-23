@@ -115,18 +115,4 @@ public partial class ProfileViewModel : BaseViewModel
     [RelayCommand]
     private Task OpenAllReviewsAsync()
         => Shell.Current.GoToAsync($"reviews?userId={_auth.CurrentUserId}");
-
-    [RelayCommand]
-    private async Task LogoutAsync()
-    {
-        var confirm = await Shell.Current.DisplayAlertAsync("Odjava", "Odjaviti se sa naloga?", "Odjava", "Otkaži");
-        if (!confirm) return;
-
-        _auth.Logout();
-
-        if (Shell.Current is AppShell shell)
-            shell.RefreshTabs();
-
-        await Shell.Current.GoToAsync("//login");
-    }
 }

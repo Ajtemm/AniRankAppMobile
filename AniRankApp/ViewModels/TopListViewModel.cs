@@ -29,7 +29,25 @@ public partial class TopListViewModel : BaseViewModel
     [ObservableProperty] private bool isRefreshing;
     [ObservableProperty] private int selectedMinVotesIndex;
 
-    partial void OnSelectedMinVotesIndexChanged(int value) => _ = LoadAsync();
+    /// <summary>Chip-friendly view of <see cref="SelectedMinVotesIndex"/>.</summary>
+    public string SelectedMinVotesOption
+    {
+        get => MinVotesOptions[SelectedMinVotesIndex];
+        set
+        {
+            var index = MinVotesOptions.ToList().IndexOf(value);
+            if (index >= 0) SelectedMinVotesIndex = index;
+        }
+    }
+
+    partial void OnSelectedMinVotesIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(SelectedMinVotesOption));
+        _ = LoadAsync();
+    }
+
+    [RelayCommand]
+    private Task GoToExploreAsync() => Shell.Current.GoToAsync("//explore");
 
     [RelayCommand]
     public async Task LoadAsync()

@@ -53,6 +53,10 @@ public class KitsuAttributes
     [JsonPropertyName("status")]
     public string? Status { get; set; }
 
+    /// <summary>TV, movie, OVA, ONA, special, music.</summary>
+    [JsonPropertyName("subtype")]
+    public string? Subtype { get; set; }
+
     [JsonPropertyName("popularityRank")]
     public int? PopularityRank { get; set; }
 

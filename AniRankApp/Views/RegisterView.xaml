@@ -4,44 +4,97 @@
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
              x:Class="AniRankApp.Views.RegisterView"
              x:DataType="vm:RegisterViewModel"
-             Shell.FlyoutBehavior="Disabled"
+             Shell.NavBarIsVisible="False"
              Title="Registracija">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="24,48" Spacing="14" VerticalOptions="Center" MaximumWidthRequest="420">
 
-            <Label Text="Kreiraj nalog"
-                   FontSize="28"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="{StaticResource PrimaryAccent}" />
+                <Image Source="logo.png"
+                       WidthRequest="72"
+                       HeightRequest="72"
+                       HorizontalOptions="Center"
+                       SemanticProperties.Description="AniRank logo" />
 
-            <Entry Placeholder="Korisničko ime" Text="{Binding Username}" />
-            <Entry Placeholder="Email" Keyboard="Email" Text="{Binding Email}" />
-            <Entry Placeholder="Lozinka (min. 6 karaktera)" IsPassword="True" Text="{Binding Password}" />
-            <Entry Placeholder="Potvrdi lozinku" IsPassword="True" Text="{Binding ConfirmPassword}" />
+                <Label Text="Kreiraj nalog"
+                       Style="{StaticResource Hero}"
+                       HorizontalOptions="Center"
+                       SemanticProperties.HeadingLevel="Level1" />
 
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="{StaticResource ScoreLow}"
-                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+                <Label Text="Treba ti samo korisničko ime, email i lozinka."
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       Margin="0,0,0,12"
+                       Style="{StaticResource Caption}" />
 
-            <Label Text="{Binding SuccessMessage}"
-                   TextColor="{StaticResource ScoreHigh}"
-                   IsVisible="{Binding SuccessMessage, Converter={StaticResource NotEmpty}}" />
+                <Entry x:Name="UsernameEntry"
+                       Placeholder="Korisničko ime"
+                       Text="{Binding Username}"
+                       ReturnType="Next"
+                       Completed="OnUsernameCompleted"
+                       SemanticProperties.Description="Korisničko ime" />
 
-            <Button Text="Registruj se"
-                    Command="{Binding RegisterCommand}"
-                    IsEnabled="{Binding IsNotBusy}" />
+                <Entry x:Name="EmailEntry"
+                       Placeholder="Email"
+                       Keyboard="Email"
+                       Text="{Binding Email}"
+                       ReturnType="Next"
+                       Completed="OnEmailCompleted"
+                       SemanticProperties.Description="Email" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center" />
+                <Grid ColumnDefinitions="*,Auto" BackgroundColor="{StaticResource CardBackground}">
+                    <Entry x:Name="PasswordEntry"
+                           Grid.Column="0"
+                           Placeholder="Lozinka (min. 6 karaktera)"
+                           IsPassword="True"
+                           Text="{Binding Password}"
+                           ReturnType="Next"
+                           Completed="OnPasswordCompleted"
+                           SemanticProperties.Description="Lozinka" />
+                    <Button x:Name="PasswordToggle"
+                            Grid.Column="1"
+                            Style="{StaticResource IconButton}"
+                            Text="{StaticResource IconVisibility}"
+                            Clicked="OnTogglePasswordClicked"
+                            SemanticProperties.Description="Prikaži lozinku" />
+                </Grid>
 
-            <Button Text="Već imaš nalog? Prijavi se"
-                    Style="{StaticResource LinkButton}"
-                    Command="{Binding GoToLoginCommand}" />
+                <Entry x:Name="ConfirmEntry"
+                       Placeholder="Potvrdi lozinku"
+                       IsPassword="True"
+                       Text="{Binding ConfirmPassword}"
+                       ReturnType="Done"
+                       ReturnCommand="{Binding RegisterCommand}"
+                       SemanticProperties.Description="Potvrda lozinke" />
 
-        </VerticalStackLayout>
-    </ScrollView>
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource DangerText}"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+
+                <Label Text="{Binding SuccessMessage}"
+                       TextColor="{StaticResource ScoreHigh}"
+                       IsVisible="{Binding SuccessMessage, Converter={StaticResource NotEmpty}}" />
+
+                <Grid Margin="0,6,0,0">
+                    <Button Text="Registruj se"
+                            Command="{Binding RegisterCommand}"
+                            IsEnabled="{Binding IsNotBusy}" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       Color="White"
+                                       HeightRequest="22"
+                                       WidthRequest="22"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                </Grid>
+
+                <Button Text="Već imaš nalog? Prijavi se"
+                        Style="{StaticResource LinkButton}"
+                        Command="{Binding GoToLoginCommand}" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 
 </ContentPage>

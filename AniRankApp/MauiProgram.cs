@@ -16,6 +16,10 @@ public static class MauiProgram
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                fonts.AddFont("Poppins-SemiBold.ttf", "PoppinsSemibold");
+                fonts.AddFont("Poppins-Bold.ttf", "PoppinsBold");
+                // Material Icons (Round) - tab bar and inline icons use it through the "Icons" alias.
+                fonts.AddFont("MaterialIconsRound-Regular.otf", "Icons");
             });
 
         // ---- Services (singletons: shared for the whole app lifetime) ----
@@ -39,6 +43,7 @@ public static class MauiProgram
         builder.Services.AddTransient<TopListViewModel>();
         builder.Services.AddTransient<AdminViewModel>();
         builder.Services.AddTransient<AdminUserReviewsViewModel>();
+        builder.Services.AddTransient<LogoutViewModel>();
 
         // ---- Views ----
         builder.Services.AddTransient<LoginView>();
@@ -52,6 +57,7 @@ public static class MauiProgram
         builder.Services.AddTransient<TopListView>();
         builder.Services.AddTransient<AdminView>();
         builder.Services.AddTransient<AdminUserReviewsView>();
+        builder.Services.AddTransient<LogoutView>();
 
 #if DEBUG
         builder.Logging.AddDebug();

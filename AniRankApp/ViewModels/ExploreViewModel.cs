@@ -56,12 +56,67 @@ public partial class ExploreViewModel : BaseViewModel
     [ObservableProperty] private bool isOffline;
     [ObservableProperty] private string offlineNotice = string.Empty;
 
-    /// <summary>Typing filters the catalogue too - debounced like the pickers.</summary>
-    partial void OnSearchTextChanged(string value) => ReloadIfNotBulk();
+    /// <summary>True only while the very first page loads - the list shows skeleton cards.</summary>
+    [ObservableProperty] private bool showSkeleton;
 
-    partial void OnSelectedSortIndexChanged(int value) => ReloadIfNotBulk();
-    partial void OnSelectedTypeIndexChanged(int value) => ReloadIfNotBulk();
-    partial void OnSelectedStatusIndexChanged(int value) => ReloadIfNotBulk();
+    // ---- Filter pills: current choice as text, and whether it differs from the default ----
+    public string SortLabel => SortOptions[SelectedSortIndex];
+    public string TypeLabel => TypeOptions[SelectedTypeIndex];
+    public string StatusLabel => StatusOptions[SelectedStatusIndex];
+    public bool IsTypeFiltered => SelectedTypeIndex != 0;
+    public bool IsStatusFiltered => SelectedStatusIndex != 0;
+    public bool HasActiveFilters =>
+        SelectedSortIndex != 0 || IsTypeFiltered || IsStatusFiltered || !string.IsNullOrWhiteSpace(SearchText);
+
+    /// <summary>Typing filters the catalogue too - debounced like the pickers.</summary>
+    partial void OnSearchTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasActiveFilters));
+        ReloadIfNotBulk();
+    }
+
+    partial void OnSelectedSortIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(SortLabel));
+        OnPropertyChanged(nameof(HasActiveFilters));
+        ReloadIfNotBulk();
+    }
+
+    partial void OnSelectedTypeIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(TypeLabel));
+        OnPropertyChanged(nameof(IsTypeFiltered));
+        OnPropertyChanged(nameof(HasActiveFilters));
+        ReloadIfNotBulk();
+    }
+
+    partial void OnSelectedStatusIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(StatusLabel));
+        OnPropertyChanged(nameof(IsStatusFiltered));
+        OnPropertyChanged(nameof(HasActiveFilters));
+        ReloadIfNotBulk();
+    }
+
+    [RelayCommand]
+    private async Task PickSortAsync()
+        => SelectedSortIndex = await PickAsync("Sortiranje", SortOptions, SelectedSortIndex);
+
+    [RelayCommand]
+    private async Task PickTypeAsync()
+        => SelectedTypeIndex = await PickAsync("Tip", TypeOptions, SelectedTypeIndex);
+
+    [RelayCommand]
+    private async Task PickStatusAsync()
+        => SelectedStatusIndex = await PickAsync("Status", StatusOptions, SelectedStatusIndex);
+
+    /// <summary>Action sheet with the options; cancelling keeps the current choice.</summary>
+    private static async Task<int> PickAsync(string title, IReadOnlyList<string> options, int current)
+    {
+        var choice = await Shell.Current.DisplayActionSheetAsync(title, "Otkaži", null, options.ToArray());
+        var index = choice is null ? -1 : options.ToList().IndexOf(choice);
+        return index >= 0 ? index : current;
+    }
 
     /// <summary>
     /// Picker changes come in bursts (sort + tip + status). Instead of firing one HTTP
@@ -215,6 +270,7 @@ public partial class ExploreViewModel : BaseViewModel
         try
         {
             IsBusy = true;
+            ShowSkeleton = Animes.Count == 0;
             ErrorMessage = null;
             IsOffline = false;
             OfflineNotice = string.Empty;
@@ -243,10 +299,9 @@ public partial class ExploreViewModel : BaseViewModel
             // which then continues from the regular (sorted) anime endpoint.
             _hasMore = list.Count >= PageSize || filter.IsPlainTrending;
 
+            // An empty result is shown by the list's EmptyView (with a reset button), not as an error.
             ResultInfo = Animes.Count == 0 ? string.Empty : $"{Animes.Count} rezultata";
-            if (Animes.Count == 0)
-                ErrorMessage = "Nema rezultata za zadate filtere.";
-            else
+            if (Animes.Count > 0)
                 await _db.SaveAnimeCacheAsync(Animes.ToList());
         }
         catch (OperationCanceledException)
@@ -263,6 +318,7 @@ public partial class ExploreViewModel : BaseViewModel
         {
             IsBusy = false;
             IsRefreshing = false;
+            ShowSkeleton = false;
         }
     }
 

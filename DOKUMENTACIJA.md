@@ -70,15 +70,27 @@ nikad direktno ne prave `new SomeView()`.
 1. `ExploreView` se pojavi → `OnAppearing` zove
    `ExploreViewModel.InitializeAsync()` → učitava prvu stranu (podrazumevano
    `trending/anime`).
-2. Korisnik menja `SearchBar` tekst, ili bilo koji od tri `Picker`-a
-   (Sortiranje / Tip / Status) → svaka promena okida ponovno učitavanje od
-   prve strane (`LoadFirstPageAsync`), koje gradi `AnimeFilter` i zove
-   `KitsuApiService.GetAnimeAsync(filter)`.
+2. Korisnik menja `SearchBar` tekst, ili jedan od tri filtera (Sortiranje / Tip /
+   Status). Filteri su „pill" dugmad ispod pretrage: tap otvara action sheet
+   (`PickSortCommand` / `PickTypeCommand` / `PickStatusCommand` →
+   `DisplayActionSheetAsync`), a pill dobija akcentni okvir kad nije na
+   podrazumevanoj vrednosti. Nema dugmeta „Primeni" — svaka promena okida ponovno
+   učitavanje od prve strane (`LoadFirstPageAsync`), koje gradi `AnimeFilter` i
+   zove `KitsuApiService.GetAnimeAsync(filter)`. „Reset" pill se pojavi tek kad
+   je neki filter aktivan (`HasActiveFilters`).
 2a. Promene filtera i kucanje u pretrazi su **debounce-ovani** (350 ms), pa niz
    izmena šalje jedan zahtev umesto više njih.
 2b. **Offline**: ako nema konekcije (`Connectivity`) ili API ne odgovara,
    prikazuje se poslednja sačuvana strana iz tabele `CachedAnime` uz obaveštenje
-   kada je snimljena; svaka uspešna prva strana osvežava taj keš.
+   kada je snimljena (žuti `ErrorBanner` pri dnu ekrana); svaka uspešna prva
+   strana osvežava taj keš.
+2c. Prvo učitavanje prikazuje pulsirajuće „skeleton" kartice (`SkeletonList`,
+   `ShowSkeleton`); kasnije promene filtera samo mali spinner u zaglavlju, a
+   stari rezultati ostaju vidljivi dok ne stignu novi. Prazan rezultat nije
+   greška — `EmptyView` pokazuje `EmptyState` sa dugmetom „Resetuj filtere".
+2d. Na širokom prozoru (Windows, tablet) lista postaje mreža:
+   `ExploreView.OnSizeAllocated` postavlja `GridItemsLayout.Span` (1–4 kolone,
+   ~380 px po kartici).
 3. Kad korisnik doskroluje do kraja liste, `CollectionView` javlja
    `RemainingItemsThresholdReachedCommand` → `LoadMoreCommand` dovlači sledeću
    stranu (`page[offset]`) i **dodaje** je na postojeću listu (uz proveru
@@ -93,26 +105,37 @@ nikad direktno ne prave `new SomeView()`.
 2. `LoadAsync` paralelno: (a) zove Kitsu `GetAnimeDetailsAsync(id)` za pun opis
    animea, (b) zove `DatabaseService.GetReviewsForAnimeAsync(id)` za sve lokalne
    recenzije tog animea i za svaku dovuče `Username` autora.
-3. Ako **trenutni korisnik** već ima svoju recenziju/status za taj anime, forma
-   se popuni njegovim postojećim podacima (status, ocena, komentar) i dugme
-   promeni tekst u "Ažuriraj moju listu" — dalji Submit radi **update**, ne
-   pravi duplikat.
-4. Forma: `Picker` za status gledanja (`Plan to Watch / Watching / Completed /
-   On Hold / Dropped`). Ako je status **Plan to Watch** ili **Dropped**,
-   sekcija za ocenu (`Slider` + `RatingBar`) se sakriva (`CanRate` property) i
-   pri snimanju se `Rating` upisuje kao `0` (što znači "bez ocene" —
-   `Review.HasRating`).
+3. Ako **trenutni korisnik** već ima svoju recenziju/status za taj anime, ona se
+   prikaže kao kartica „Moja lista" (`MyEntry`: status, ocena, epizode, komentar)
+   sa dugmetom „Izmeni"; inače stoji jedno dugme „Dodaj na moju listu". Oba
+   otvaraju formu u **donjem panelu** (bottom sheet): `OpenEditorCommand` popuni
+   formu sačuvanim podacima (`FillForm`) i postavi `IsEditorOpen`, a
+   `AnimeDetailView.xaml.cs` animira panel (klizi odozdo, pozadina se zatamni;
+   tap na pozadinu, ✕ ili Android „back" ga zatvara). Ako zapis postoji, Submit
+   radi **update**, ne pravi duplikat.
+4. Forma: status gledanja se bira čipovima (`ChipGroup`: `Plan to Watch /
+   Watching / Completed / On Hold / Dropped`), a ocena tapom na broj 1–10
+   (`RatingPicker`, uz reč ispod broja — `RatingWord`: „Solidno", „Odlično"...).
+   Ako je status **Plan to Watch** ili **Dropped**, sekcija za ocenu se sakriva
+   (`CanRate` property) i pri snimanju se `Rating` upisuje kao `0` (što znači
+   "bez ocene" — `Review.HasRating`).
 5. Polje **„Odgledano epizoda"** (`Review.EpisodesWatched`) se prikazuje za sve
    statuse osim „Plan to Watch" (`CanTrackProgress`); prazno polje znači 0.
 6. `SubmitReviewCommand` snima (insert ili update) u `Reviews` tabelu preko
    `DatabaseService`, pa ponovo učita listu recenzija za taj anime. **Izmena
-   postavlja `UpdatedAt`, a `CreatedAt` ostaje originalni datum unosa.** Potvrda
-   ide kao toast (`ToastHelper`), ne kao modalni `DisplayAlert`.
+   postavlja `UpdatedAt`, a `CreatedAt` ostaje originalni datum unosa.** Posle
+   uspešnog snimanja panel se zatvori, a potvrda ide kao toast (`ToastHelper`),
+   ne kao modalni `DisplayAlert`.
 7. Pored Kitsu ocene stoji i **ocena zajednice** — prosek ocena datih u ovoj
    aplikaciji (`GetAnimeRatingStatsAsync`, `AVG` + `COUNT` u SQL-u).
 8. Tuđe recenzije imaju dugme **„Korisno" (♡/♥)** → tabela `ReviewLikes`
-   (`INSERT OR IGNORE`, unique par). Lista recenzija se sortira po
+   (`INSERT OR IGNORE`, unique par). Lista recenzija se sortira čipovima
    **Najkorisnije / Najnovije / Najbolje ocenjene**, sve u memoriji.
+9. Opis je skraćen na 4 reda; „Prikaži više" (`ToggleSynopsisCommand`) se nudi
+   samo za duže tekstove (`HasLongSynopsis`).
+10. Stranica je `ScrollView` + `BindableLayout` za recenzije (ne `CollectionView`
+   sa `Header`): recenzija po animeu ima malo, a na Windowsu je scroll anchoring
+   pomerao rastući header van ekrana.
 
 ### 2.5 Lista recenzija jednog profila
 
@@ -127,9 +150,9 @@ ruta `reviews?userId={id}&status={status}`.
    Watching / Completed / On Hold / Dropped).
 3. Klik na filter čip menja `SelectedStatusFilter` → lokalno filtrira već
    učitanu listu (bez novog poziva ka bazi).
-4. `Picker` **Sortiranje** (Najnovije / Najstarije / Najveća ocena / Najmanja
-   ocena / Naziv A-Š) uređuje već učitanu listu, bez novog upita.
-5. `CanDelete` je tačno kad je to **moja** lista — samo tad se dugme "Obriši"
+4. Pill **Sortiranje** (action sheet: Najnovije / Najstarije / Najveća ocena /
+   Najmanja ocena / Naziv A-Š) uređuje već učitanu listu, bez novog upita.
+5. `CanDelete` je tačno kad je to **moja** lista — samo tad se ikonica kante
    prikazuje i **swipe ulevo** radi (`SwipeView.IsEnabled`). Tuđe recenzije su
    samo za gledanje.
 6. Ako je vlasnik liste označio profil kao **privatan**, a ja ga ne pratim (i
@@ -137,17 +160,23 @@ ruta `reviews?userId={id}&status={status}`.
 
 ### 2.6 Profil
 
-Prikazuje osnovne podatke o nalogu (iz `AuthService`, tj. iz `Preferences`),
-broj pratilaca / koliko ih prati, ukupan broj stavki u "mojoj listi" i
-raspodelu po statusu.
+Prikazuje avatar sa inicijalima (`InitialsConverter`), osnovne podatke o nalogu
+(iz `AuthService`, tj. iz `Preferences`), tri pločice sa brojevima (recenzija /
+pratilaca / pratim — tap na recenzije otvara listu) i raspodelu po statusu.
 
 **Svaki red raspodele je klikabilan** (`TapGestureRecognizer` → `OnStatusTapped`
 → `OpenStatusCommand`): klik na npr. "Completed" otvara stranicu recenzija
 (`reviews?userId={ja}&status=Completed`), tj. tačno one recenzije koje su sa
 tog profila stavljene u taj status. Dugme "Sve moje recenzije" otvara istu
 stranicu bez filtera. Prekidač **„Privatan profil"** (`User.IsPrivate`) se snima
-odmah pri promeni, bez dugmeta Sačuvaj. Dugme Odjava briše sesiju iz
-`Preferences` i vraća na Login.
+odmah pri promeni, bez dugmeta Sačuvaj.
+
+**Odjava** je poslednji tab (`//logout` → `LogoutView` / `LogoutViewModel`): sama
+stranica je potvrda — „Odjavi se" briše sesiju iz `Preferences` i vraća na Login,
+a „Otkaži" vraća na poslednji otvoreni tab (`AppShell.LastTabRoute`, pamti se u
+`OnNavigated`). Namerno je stranica, a ne tab-akcija sa `Cancel()` u
+`OnNavigating`: na Windowsu otkazana navigacija ostavlja izabran tab, a ručno
+vraćanje izbora je rušilo WinUI.
 
 ### 2.7 Zajednica (feed + praćenje korisnika)
 
@@ -175,9 +204,12 @@ odmah pri promeni, bez dugmeta Sačuvaj. Dugme Odjava briše sesiju iz
    istom klikabilnom raspodelom po statusu (vodi na recenzije tog korisnika).
    Ako je profil **privatan**, a ja ga ne pratim, umesto liste stoji poruka —
    čim ga zapratim, sadržaj se otključava (`CanSeeList`).
-6. Dugme **„Top lista"** otvara `toplist` → `TopListViewModel`: rang-lista animea
-   po proseku ocena datih u ovoj aplikaciji (`GetCommunityTopAsync`), sa
-   filterom minimalnog broja ocena.
+6. Prazan feed nudi dugme „Pronađi korisnike" (`BrowseUsersCommand` → segment
+   „Svi").
+7. **Top lista** je sopstveni tab (`//toplist`) → `TopListViewModel`: rang-lista
+   animea po proseku ocena datih u ovoj aplikaciji (`GetCommunityTopAsync`), sa
+   čipovima za minimalan broj ocena; prva tri mesta su zlatna/srebrna/bronzana
+   (`CommunityRankItem.Medal` + `DataTrigger`).
 
 ### 2.8 Admin panel (samo za `Role == "Admin"`)
 
@@ -186,7 +218,8 @@ odmah pri promeni, bez dugmeta Sačuvaj. Dugme Odjava briše sesiju iz
 2. Za svakog korisnika: **"Pogledaj recenzije"** vodi na posebnu stranicu
    (`AdminUserReviewsView`, ruta `adminuserreviews?userId={id}`) — recenzije se
    ne prikazuju sve odjednom, već tek kad admin klikne na konkretnog korisnika.
-   Dugme "Sve recenzije u sistemu" otvara istu stranicu sa `userId=0`.
+   Dugme "Sve recenzije" (u zaglavlju) otvara istu stranicu sa `userId=0`.
+   Forma „Dodaj korisnika ručno" je sklopljena dok se ne tapne njen naslov.
 3. **"Banuj/Odbanuj"** — umesto brisanja naloga, postavlja `User.IsBanned`.
    Banovan korisnik ostaje u bazi (sa svim recenzijama), ali `AuthService.LoginAsync`
    odbija njegovu sledeću prijavu. "Obriši" i dalje postoji za trajno brisanje
@@ -249,7 +282,8 @@ Svi nasleđuju `BaseViewModel` (`IsBusy`, `IsNotBusy`, `Title`, `ErrorMessage`).
 | `ExploreViewModel.cs` | Istraži | Filteri (sort/tip/status), pretraga, **paginacija** (`LoadFirstPageAsync`/`LoadMoreAsync`), navigacija na detalje. |
 | `AnimeDetailViewModel.cs` | Detalji animea | Učitavanje detalja sa API-ja + lokalnih recenzija, forma za status/ocenu/komentar, update-or-insert logika, `CanRate`. |
 | `MyReviewsViewModel.cs` | Recenzije jednog profila | `IQueryAttributable` prima `userId` + `status`; filtriranje po statusu, rezime, brisanje **samo** kad je lista moja (`CanDelete`). |
-| `ProfileViewModel.cs` | Profil | Podaci o nalogu, brojači pratilaca, raspodela po statusu i navigacija sa nje na recenzije, odjava. |
+| `ProfileViewModel.cs` | Profil | Podaci o nalogu, brojači pratilaca, raspodela po statusu i navigacija sa nje na recenzije. |
+| `LogoutViewModel.cs` | Odjava | `LogoutCommand` (briše sesiju → Login), `CancelCommand` (nazad na poslednji tab). |
 | `CommunityViewModel.cs` | Zajednica | Feed korisnika koje pratim, pretraga po imenu, segmenti Feed/Svi/Pratim/Prate me, follow-unfollow, bedž za nove pratioce, otvaranje tuđeg profila i top liste. `CommunityUserItem` je stavka liste sa svojim follow stanjem. |
 | `UserProfileViewModel.cs` | Tuđi profil | `IQueryAttributable` prima `userId`; brojači, follow dugme, provera privatnosti (`CanSeeList`) i raspodela po statusu koja vodi na recenzije tog korisnika. |
 | `TopListViewModel.cs` | Top lista zajednice | Rangiranje animea po proseku lokalnih ocena (`GetCommunityTopAsync`), filter minimalnog broja ocena, otvaranje detalja animea. |
@@ -267,23 +301,36 @@ ka komandama na ViewModel-u — **nema poslovne logike u code-behind fajlovima**
 | Fajl | Prikazuje |
 |---|---|
 | `LoginView` / `RegisterView` | Forme za autentifikaciju. |
-| `ExploreView` | `SearchBar` + 3 `Picker`-a (filteri) + `CollectionView` kartica animea sa paginacijom. |
-| `AnimeDetailView` | Banner/poster/opis + forma za status/ocenu/komentar + lista recenzija (kroz `CollectionView.Header` + `CollectionView.ItemTemplate`). |
-| `MyReviewsView` | Filter-čipovi po statusu + lista recenzija jednog profila (dugme "Obriši" vidljivo samo na sopstvenoj listi). |
-| `ProfileView` | Info o nalogu, brojači pratilaca, klikabilna raspodela po statusu, odjava. |
-| `CommunityView` | Feed pratilaca + pretraga korisnika, čipovi Feed/Svi/Pratim/Prate me, kartice sa dugmetom Zaprati/Otprati, baner za nove pratioce, dugme Top lista. |
+| `ExploreView` | `SearchBar` + 3 filter „pill"-a (action sheet) + `CollectionView` (`GridItemsLayout`, broj kolona po širini) sa paginacijom, skeleton kartice pri prvom učitavanju. |
+| `AnimeDetailView` | Hero (cover sa gradijentom + poster), kartica „Moja lista", opis sa „Prikaži više", recenzije (`ScrollView` + `BindableLayout`) i animirani donji panel sa formom. |
+| `MyReviewsView` | Filter-čipovi po statusu + pill za sortiranje + lista recenzija jednog profila (ikonica za brisanje vidljiva samo na sopstvenoj listi). |
+| `ProfileView` | Avatar, pločice sa brojevima, privatnost, klikabilna raspodela po statusu. |
+| `LogoutView` | Tab „Odjava": kartica sa potvrdom (Odjavi se / Otkaži). |
+| `CommunityView` | Feed pratilaca + pretraga korisnika, čipovi Feed/Svi/Pratim/Prate me, kartice sa avatarom i dugmetom Zaprati/Otprati, baner za nove pratioce. |
 | `UserProfileView` | Javni profil drugog korisnika: brojači, dugme za praćenje, klikabilna raspodela po statusu (sakrivena za privatan profil). |
-| `TopListView` | Rang-lista animea po lokalnim ocenama sa posterima i bedževima. |
+| `TopListView` | Tab: rang-lista animea po lokalnim ocenama sa posterima, medaljama za top 3 i bedževima. |
 | `AdminView` | Pretraga i lista korisnika, dugmad Banuj/Obriši/Pogledaj recenzije. |
 | `AdminUserReviewsView` | Recenzije jednog korisnika (ili svih, za `userId=0`) sa brisanjem. |
 
-### 3.5 `Controls/RatingBar.xaml(.cs)` — custom kontrola
+### 3.5 `Controls/` — custom kontrole
 
-`ContentView` sa tri `BindableProperty`: `RatingValue` (double), `MaxRating`
-(int), `ShowStars` (bool). U code-behind, svaka promena bilo kog od njih
-(`Render()`) ručno iscrtava 5 zvezdica (★/☆) i bedž sa brojčanom vrednošću,
-obojen po istoj logici kao i DataTrigger bedž (zeleno ≥80%, žuto ≥50%, crveno
-ispod). Koristi se i u karticama liste i u formi za ocenjivanje.
+**`RatingBar.xaml(.cs)`** — `ContentView` sa tri `BindableProperty`:
+`RatingValue` (double), `MaxRating` (int), `ShowStars` (bool). U code-behind,
+svaka promena bilo kog od njih (`Render()`) ručno iscrtava 5 zvezdica (Material
+ikonice) i bedž sa brojčanom vrednošću, obojen po istoj logici kao i DataTrigger
+bedž (zeleno ≥80%, žuto ≥50%, crveno ispod), sa tamnim tekstom zbog kontrasta.
+Koristi se u karticama liste „Moje recenzije".
+
+Ostale kontrole su napravljene u C#-u (bez XAML-a) i sve imaju `BindableProperty`:
+
+| Fajl | Namena |
+|---|---|
+| `RatingPicker.cs` | Unos ocene: 10 polja 1–10, tap bira ocenu; `Value` je two-way. |
+| `ChipGroup.cs` | Čipovi sa jednim izborom koji se prelamaju u redove (`FlexLayout`); `ItemsSource` + two-way `SelectedItem` (string). Koristi se za status, sortiranje recenzija, segmente Zajednice, filtere liste i top liste. |
+| `ErrorBanner.cs` | Poruka koja „lebdi" pri dnu stranice (ne pomera raspored), sa ✕ koji briše `Message` (two-way na `ErrorMessage`); `IsWarning` = žuta varijanta za offline. |
+| `EmptyState.cs` | Sadržaj za `CollectionView.EmptyView`: ikonica, naslov, poruka i opciono dugme (`ActionText` + `ActionCommand`). |
+| `SkeletonList.cs` | Pulsirajuće kartice-čuvari mesta dok se lista prvi put učitava (`IsActive`). |
+| `ThemeColors.cs` / `IconGlyphs.cs` | Čitanje boja iz resursa za kontrole pravljene u kodu; kodovi Material ikonica. |
 
 ### 3.6 `Converters/Converters.cs`
 
@@ -292,6 +339,7 @@ ispod). Koristi se i u karticama liste i u formi za ocenjivanje.
   imaju sadržaj.
 - `InvertedBoolConverter` — obrće bool (npr. `CanRate` → prikaz napomene kad
   se **ne** može oceniti).
+- `InitialsConverter` — korisničko ime → dva slova za avatar („marko_05" → „MA").
 
 ### 3.7 `Helpers/`
 
@@ -299,8 +347,11 @@ ispod). Koristi se i u karticama liste i u formi za ocenjivanje.
   kucaju stringovi na više mesta).
 - `SecurityHelper.cs` — SHA-256 heš lozinke (`Hash(string)`).
 - `ToastHelper.cs` — kratka potvrda bez prekidanja korisnika; na Androidu native
-  `Toast`, na ostalim platformama fallback na alert. Koristi se umesto
-  `DisplayAlert` za uspešne akcije (čuvanje liste, brisanje, promena privatnosti).
+  `Toast`, na Windowsu „snackbar" koji se na 2 s pojavi preko dna trenutne
+  stranice (koren svake stranice je `Grid`), a alert samo kao poslednja opcija.
+  Koristi se umesto `DisplayAlert` za uspešne akcije (čuvanje liste, brisanje,
+  promena privatnosti).
+- `PasswordVisibility.cs` — dugme „oko" pored lozinke (Login/Registracija).
 - `ServiceHelper.cs` — most do DI kontejnera (`IPlatformApplication.Current.Services`)
   za slučajeve kad MAUI/Shell napravi View bez parametara (npr. `ContentTemplate`);
   svaka `View` ima i bezparametarski konstruktor koji preko ovoga sam izvuče
@@ -309,13 +360,23 @@ ispod). Koristi se i u karticama liste i u formi za ocenjivanje.
 ### 3.8 `Resources/Styles/`
 
 - `Colors.xaml`, `Styles.xaml` — deo standardnog MAUI šablona (osnovna paleta i
-  stilovi); ostavljeni netaknuti kao fallback.
+  stilovi), kao fallback. U `Colors.xaml` su `Primary` i `OffBlack` usklađeni sa
+  AniRank paletom, jer šablonski implicitni `Page` stil koristi `OffBlack` za
+  pozadinu.
 - `CustomStyles.xaml` — **ovde je sav vizuelni identitet aplikacije**: tamna
-  paleta boja (pozadina, kartice, akcenat, boje za ocene), implicitni stilovi
-  (`ContentPage, Label, Button, Entry, Picker...`), imenovani stilovi za
-  kartice (`AnimeCardStyle, ReviewCardStyle`), bedževe (`ScoreBadgeStyle` sa
-  `DataTrigger`-ima za boju po oceni, `StatusBadgeStyle`, `BanBadgeStyle`) i
-  `Trigger` za fokusirano polje unosa.
+  paleta boja (pozadina, kartice, akcenat, boje za ocene, `OnScore` = tamni tekst
+  na bedževima), kodovi ikonica (`Icon*` stringovi i `TabIcon*` za tabove),
+  tipografija (`Hero`, `SectionTitle`, `CardTitle` u fontu Poppins, `Caption`,
+  `Body`, `Icon`), implicitni stilovi (`ContentPage, Label, Button, Entry,
+  Picker...`), imenovani stilovi za kartice, avatar, pločice statistike, „pill"
+  filtere i bedževe (`ScoreBadgeStyle` sa `DataTrigger`-ima za boju po oceni,
+  `StatusBadgeStyle`, `BanBadgeStyle`) i `Trigger` za fokusirano polje unosa.
+  **Pravilo boja:** `Primary` je za popunjene površine (dugmad, izabrani čip) sa
+  belim tekstom, a `PrimaryAccent` za tekst/ikonice na tamnoj pozadini.
+- `Resources/Fonts/` — OpenSans (tekst), Poppins SemiBold/Bold (naslovi) i
+  Material Icons Round (ikonice, alias `Icons`); registrovani u `MauiProgram.cs`.
+- `Resources/AppIcon`, `Resources/Splash`, `Resources/Images/logo.svg` — AniRank
+  logo (zvezda iznad postolja na ljubičastom gradijentu).
 
 ### 3.9 `Platforms/Android/`
 
@@ -325,10 +386,11 @@ ispod). Koristi se i u karticama liste i u formi za ocenjivanje.
   koje MAUI generiše; `MainApplication.CreateMauiApp()` samo pozove
   `MauiProgram.CreateMauiApp()`.
 
-*(Folderi `Platforms/iOS`, `Platforms/MacCatalyst`, `Platforms/Windows`
-postoje kao ostatak originalnog MAUI šablona, ali se **ne kompajliraju** — u
-`AniRankApp.csproj` je `TargetFrameworks` postavljen samo na `net10.0-android`,
-pa MSBuild te foldere ignoriše.)*
+*(Folderi `Platforms/iOS` i `Platforms/MacCatalyst` postoje kao ostatak
+originalnog MAUI šablona, ali se **ne kompajliraju** — `TargetFrameworks` u
+`AniRankApp.csproj` je `net10.0-android;net10.0-windows10.0.19041.0`.
+Windows verzija se pokreće kao običan `.exe` (`WindowsPackageType=None`), pa
+Visual Studio („Windows Machine") ne traži Developer Mode.)*
 
 ---
 
@@ -410,14 +472,21 @@ postojeću bazu pri sledećem pokretanju posle update-a koda).
 //register                 RegisterView         (van TabBar-a)
 //explore                  ExploreView          (Tab 1)
 //community                CommunityView        (Tab 2)
-//profile                  ProfileView          (Tab 3)
-//admin                    AdminView            (Tab 4, samo Admin - IsVisible="{Binding IsAdmin}")
+//toplist                  TopListView          (Tab 3)
+//profile                  ProfileView          (Tab 4)
+//admin                    AdminView            (Tab 5, samo Admin - IsVisible="{Binding IsAdmin}")
+//logout                   LogoutView           (poslednji tab: potvrda odjave)
+
+Tabovi su donja traka na Androidu, a gornja na Windowsu, svaki sa Material
+ikonicom (`TabIcon*` u CustomStyles.xaml). Tab stranice skrivaju Shell nav bar
+(`Shell.NavBarIsVisible="False"`) i same prikazuju veliki naslov, a stranice
+gurnute na stack (detalji, profil, recenzije) zadržavaju nav bar sa strelicom
+nazad.
 
 AnimeDetailView            guranje na tab stack, npr. "AnimeDetailView?id=1234"
 reviews                    recenzije jednog profila, "reviews?userId=5&status=Completed"
                            (bez status parametra = sve; sa profila i sa tuđeg profila)
 userprofile                javni profil korisnika, "userprofile?userId=5" (iz Zajednice)
-toplist                    top lista zajednice (dugme "Top lista" u tabu Zajednica)
 adminuserreviews           guranje na Admin tab stack, "adminuserreviews?userId=5" (0 = svi)
 ```
 

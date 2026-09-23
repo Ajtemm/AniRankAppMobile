@@ -21,3 +21,16 @@ public class InvertedBoolConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => value is bool b && !b;
 }
+
+/// <summary>"marko_05" -> "MA": the letters shown inside a user's avatar circle.</summary>
+public class InitialsConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var letters = (value as string ?? string.Empty).Where(char.IsLetterOrDigit).Take(2).ToArray();
+        return letters.Length == 0 ? "?" : new string(letters).ToUpper(culture);
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}

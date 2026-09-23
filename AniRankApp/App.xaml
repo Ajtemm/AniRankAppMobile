@@ -14,6 +14,7 @@
 
             <conv:NotEmptyBoolConverter x:Key="NotEmpty" />
             <conv:InvertedBoolConverter x:Key="Invert" />
+            <conv:InitialsConverter x:Key="Initials" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

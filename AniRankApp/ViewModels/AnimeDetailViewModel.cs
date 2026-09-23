@@ -45,11 +45,75 @@ public partial class AnimeDetailViewModel : BaseViewModel
     [ObservableProperty] private bool canRate = true;
     [ObservableProperty] private bool canTrackProgress = true;
     [ObservableProperty] private bool hasNoReviews;
-    [ObservableProperty] private string submitButtonText = "Sačuvaj u moju listu";
+    [ObservableProperty] private string submitButtonText = "Dodaj u moju listu";
     [ObservableProperty] private string communityRatingText = "Zajednica: još nema ocena";
     [ObservableProperty] private int selectedReviewSortIndex;
 
+    /// <summary>The signed-in user's own entry for this anime, shown as a summary card.</summary>
+    [ObservableProperty] private Review? myEntry;
+
+    /// <summary>The review form lives in a bottom sheet; the view animates it on this flag.</summary>
+    [ObservableProperty] private bool isEditorOpen;
+
+    [ObservableProperty] private bool isSynopsisExpanded;
+
+    public bool HasMyEntry => MyEntry is not null;
+
+    /// <summary>"Prikaži više" only makes sense when the text can overflow four lines.</summary>
+    public bool HasLongSynopsis => (Anime?.Synopsis.Length ?? 0) > 280;
+
+    /// <summary>Chip-friendly view of <see cref="SelectedReviewSortIndex"/>.</summary>
+    public string SelectedReviewSortOption
+    {
+        get => ReviewSortOptions[SelectedReviewSortIndex];
+        set
+        {
+            var index = ReviewSortOptions.ToList().IndexOf(value);
+            if (index >= 0) SelectedReviewSortIndex = index;
+        }
+    }
+    public int SynopsisMaxLines => IsSynopsisExpanded ? -1 : 4;
+    public string SynopsisToggleText => IsSynopsisExpanded ? "Prikaži manje" : "Prikaži više";
+    public string ReviewsHeader => _allReviews.Count == 0 ? "Recenzije korisnika" : $"Recenzije korisnika ({_allReviews.Count})";
+
+    /// <summary>Word under the big number on the rating picker.</summary>
+    public string RatingWord => Math.Round(NewRating) switch
+    {
+        <= 2 => "Loše",
+        <= 4 => "Slabo",
+        <= 6 => "Solidno",
+        7 => "Dobro",
+        8 => "Vrlo dobro",
+        9 => "Odlično",
+        _ => "Remek-delo"
+    };
+
     partial void OnAnimeIdChanged(string value) => _ = LoadAsync();
+
+    partial void OnNewRatingChanged(double value) => OnPropertyChanged(nameof(RatingWord));
+
+    partial void OnMyEntryChanged(Review? value) => OnPropertyChanged(nameof(HasMyEntry));
+
+    partial void OnIsSynopsisExpandedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SynopsisMaxLines));
+        OnPropertyChanged(nameof(SynopsisToggleText));
+    }
+
+    [RelayCommand]
+    private void ToggleSynopsis() => IsSynopsisExpanded = !IsSynopsisExpanded;
+
+    /// <summary>Opens the sheet with the form reset to the saved entry (drops unsaved edits).</summary>
+    [RelayCommand]
+    private void OpenEditor()
+    {
+        ErrorMessage = null;
+        FillForm(MyEntry);
+        IsEditorOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseEditor() => IsEditorOpen = false;
 
     partial void OnSelectedStatusChanged(string value)
     {
@@ -58,7 +122,13 @@ public partial class AnimeDetailViewModel : BaseViewModel
         CanTrackProgress = WatchStatus.Normalize(value) != WatchStatus.PlanToWatch;
     }
 
-    partial void OnSelectedReviewSortIndexChanged(int value) => ApplyReviewSort();
+    partial void OnSelectedReviewSortIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(SelectedReviewSortOption));
+        ApplyReviewSort();
+    }
+
+    partial void OnAnimeChanged(Anime? value) => OnPropertyChanged(nameof(HasLongSynopsis));
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -109,6 +179,7 @@ public partial class AnimeDetailViewModel : BaseViewModel
         }
 
         HasNoReviews = _allReviews.Count == 0;
+        OnPropertyChanged(nameof(ReviewsHeader));
         ApplyReviewSort();
 
         var (average, votes) = await _db.GetAnimeRatingStatsAsync(AnimeId);
@@ -118,19 +189,28 @@ public partial class AnimeDetailViewModel : BaseViewModel
 
         // Pre-fill the form if the current user already has an entry for this anime.
         var mine = _allReviews.FirstOrDefault(r => r.IsMine);
-        if (mine is not null)
+        _myReviewId = mine?.Id;
+        MyEntry = mine;
+        FillForm(mine);
+    }
+
+    private void FillForm(Review? entry)
+    {
+        if (entry is not null)
         {
-            _myReviewId = mine.Id;
-            NewRating = mine.Rating is >= 1 and <= 10 ? mine.Rating : 5;
-            NewComment = mine.Comment;
-            NewEpisodesWatched = mine.EpisodesWatched > 0 ? mine.EpisodesWatched.ToString() : string.Empty;
-            SelectedStatus = WatchStatus.Normalize(mine.Status); // updates CanRate / CanTrackProgress
-            SubmitButtonText = "Ažuriraj moju listu";
+            NewRating = entry.Rating is >= 1 and <= 10 ? entry.Rating : 5;
+            NewComment = entry.Comment;
+            NewEpisodesWatched = entry.EpisodesWatched > 0 ? entry.EpisodesWatched.ToString() : string.Empty;
+            SelectedStatus = WatchStatus.Normalize(entry.Status); // updates CanRate / CanTrackProgress
+            SubmitButtonText = "Sačuvaj izmene";
         }
         else
         {
-            _myReviewId = null;
-            SubmitButtonText = "Sačuvaj u moju listu";
+            NewRating = 5;
+            NewComment = string.Empty;
+            NewEpisodesWatched = string.Empty;
+            SelectedStatus = WatchStatus.Completed;
+            SubmitButtonText = "Dodaj u moju listu";
         }
     }
 
@@ -248,6 +328,7 @@ public partial class AnimeDetailViewModel : BaseViewModel
             }
 
             await LoadReviewsAsync();
+            IsEditorOpen = false;
             await ToastHelper.ShowAsync("Vaša lista je ažurirana.");
         }
         catch (Exception ex)

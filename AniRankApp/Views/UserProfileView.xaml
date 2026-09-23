@@ -2,94 +2,131 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:AniRankApp.ViewModels"
+             xmlns:controls="clr-namespace:AniRankApp.Controls"
              x:Class="AniRankApp.Views.UserProfileView"
              x:DataType="vm:UserProfileViewModel"
              Title="{Binding Title}">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="16">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="16,12,16,24" Spacing="16" MaximumWidthRequest="640">
 
-            <Border Style="{StaticResource ReviewCardStyle}">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Korisnik" Style="{StaticResource Caption}" />
-                    <Label Text="{Binding Username}" FontSize="22" FontAttributes="Bold" />
+                <!-- ===== Identity ===== -->
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                    <Border Grid.Column="0" Style="{StaticResource AvatarStyle}" WidthRequest="72" HeightRequest="72">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="36" />
+                        </Border.StrokeShape>
+                        <Label Style="{StaticResource AvatarLabelStyle}" FontSize="26"
+                               Text="{Binding Username, Converter={StaticResource Initials}}" />
+                    </Border>
 
-                    <Label Text="{Binding Role, StringFormat='Uloga: {0}'}" />
-                    <Label Text="{Binding JoinedText}" Style="{StaticResource Caption}" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="{Binding Username}" Style="{StaticResource Hero}" FontSize="24"
+                               LineBreakMode="TailTruncation" SemanticProperties.HeadingLevel="Level1" />
+                        <Label Text="{Binding JoinedText}" Style="{StaticResource Caption}" />
+                        <FlexLayout Wrap="Wrap">
+                            <Border Style="{StaticResource StatusBadgeStyle}" Margin="0,2,6,0">
+                                <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="{Binding Role}" />
+                            </Border>
+                            <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding FollowsMe}" Margin="0,2,6,0">
+                                <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="Prati te" />
+                            </Border>
+                            <Border Style="{StaticResource BanBadgeStyle}" IsVisible="{Binding IsPrivateProfile}" Margin="0,2,6,0">
+                                <HorizontalStackLayout Spacing="3">
+                                    <Label Style="{StaticResource Icon}" Text="{StaticResource IconLock}" FontSize="12" TextColor="{StaticResource DangerText}" />
+                                    <Label Style="{StaticResource BanBadgeLabelStyle}" Text="Privatan profil" />
+                                </HorizontalStackLayout>
+                            </Border>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Grid>
 
-                    <HorizontalStackLayout Spacing="16">
-                        <Label Text="{Binding FollowerCount, StringFormat='Pratilaca: {0}'}" />
-                        <Label Text="{Binding FollowingCount, StringFormat='Prati: {0}'}" />
-                    </HorizontalStackLayout>
+                <Button Text="{Binding FollowActionText}"
+                        IsVisible="{Binding IsSelf, Converter={StaticResource Invert}}"
+                        Command="{Binding ToggleFollowCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsFollowing}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundAlt}" />
+                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
 
-                    <HorizontalStackLayout Spacing="6">
-                        <Border Style="{StaticResource StatusBadgeStyle}" IsVisible="{Binding FollowsMe}">
-                            <Label Style="{StaticResource StatusBadgeLabelStyle}" Text="Prati te" />
-                        </Border>
-                        <Border Style="{StaticResource BanBadgeStyle}" IsVisible="{Binding IsPrivateProfile}">
-                            <Label Style="{StaticResource BanBadgeLabelStyle}" Text="Privatan profil" />
-                        </Border>
-                    </HorizontalStackLayout>
+                <!-- ===== Stats ===== -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                    <Border Grid.Column="0" Style="{StaticResource StatTileStyle}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding ReviewCount}" Style="{StaticResource StatValueStyle}" />
+                            <Label Text="Recenzija" Style="{StaticResource StatCaptionStyle}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource StatTileStyle}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding FollowerCount}" Style="{StaticResource StatValueStyle}" />
+                            <Label Text="Pratilaca" Style="{StaticResource StatCaptionStyle}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource StatTileStyle}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding FollowingCount}" Style="{StaticResource StatValueStyle}" />
+                            <Label Text="Prati" Style="{StaticResource StatCaptionStyle}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
 
-                    <Button Text="{Binding FollowActionText}"
-                            IsVisible="{Binding IsSelf, Converter={StaticResource Invert}}"
-                            Command="{Binding ToggleFollowCommand}" />
-                </VerticalStackLayout>
-            </Border>
+                <!-- ===== Private profile: nothing below is shown without permission ===== -->
+                <Border Style="{StaticResource FilterCardStyle}"
+                        IsVisible="{Binding CanSeeList, Converter={StaticResource Invert}}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Grid.Column="0" Style="{StaticResource Icon}" Text="{StaticResource IconLock}" FontSize="28" />
+                        <Label Grid.Column="1" Text="{Binding PrivacyNotice}" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
 
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="{StaticResource ScoreLow}"
-                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmpty}}" />
+                <!-- ===== Watch-status breakdown - tap a row to see those reviews ===== -->
+                <Label Text="Lista po statusu"
+                       Style="{StaticResource SectionTitle}"
+                       Margin="0,4,0,-6"
+                       IsVisible="{Binding CanSeeList}" />
 
-            <!-- ===== Private profile: nothing below is shown without permission ===== -->
-            <Border Style="{StaticResource FilterCardStyle}"
-                    IsVisible="{Binding CanSeeList, Converter={StaticResource Invert}}">
-                <Label Text="{Binding PrivacyNotice}" />
-            </Border>
+                <Border Style="{StaticResource ReviewCardStyle}"
+                        Padding="14,4"
+                        Margin="0"
+                        IsVisible="{Binding CanSeeList}">
+                    <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding StatusBreakdown}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StatusCountItem">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,12"
+                                      SemanticProperties.Description="{Binding Status}">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnStatusTapped" />
+                                    </Grid.GestureRecognizers>
 
-            <!-- ===== Watch-status breakdown - tap a row to see those reviews ===== -->
-            <Label Text="Lista po statusu"
-                   Style="{StaticResource SectionTitle}"
-                   IsVisible="{Binding CanSeeList}" />
-            <Label Text="Dodirni status da vidiš recenzije sa ovog profila."
-                   Style="{StaticResource Caption}"
-                   IsVisible="{Binding CanSeeList}" />
+                                    <Label Grid.Column="0" Text="{Binding Status}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Count}"
+                                           FontFamily="OpenSansSemibold"
+                                           VerticalOptions="Center"
+                                           TextColor="{StaticResource PrimaryAccent}" />
+                                    <Label Grid.Column="2" Style="{StaticResource Icon}" Text="{StaticResource IconChevron}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </Border>
 
-            <Border Style="{StaticResource ReviewCardStyle}"
-                    IsVisible="{Binding CanSeeList}">
-                <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding StatusBreakdown}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:StatusCountItem">
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="0,10">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnStatusTapped" />
-                                </Grid.GestureRecognizers>
+                <Button Text="{Binding ReviewCount, StringFormat='Sve recenzije ({0})'}"
+                        Style="{StaticResource SubtleButton}"
+                        IsVisible="{Binding CanSeeList}"
+                        Command="{Binding OpenAllReviewsCommand}" />
 
-                                <Label Grid.Column="0" Text="{Binding Status}" VerticalOptions="Center" />
-                                <Label Grid.Column="1"
-                                       Text="{Binding Count}"
-                                       FontAttributes="Bold"
-                                       VerticalOptions="Center"
-                                       TextColor="{StaticResource PrimaryAccent}" />
-                                <Label Grid.Column="2"
-                                       Text="›"
-                                       FontSize="18"
-                                       VerticalOptions="Center"
-                                       TextColor="{StaticResource Gray400}" />
-                            </Grid>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </VerticalStackLayout>
-            </Border>
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
 
-            <Button Text="{Binding ReviewCount, StringFormat='Sve recenzije ({0})'}"
-                    Style="{StaticResource SubtleButton}"
-                    IsVisible="{Binding CanSeeList}"
-                    Command="{Binding OpenAllReviewsCommand}" />
+            </VerticalStackLayout>
+        </ScrollView>
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
-
-        </VerticalStackLayout>
-    </ScrollView>
+        <controls:ErrorBanner Message="{Binding ErrorMessage}" />
+    </Grid>
 
 </ContentPage>
