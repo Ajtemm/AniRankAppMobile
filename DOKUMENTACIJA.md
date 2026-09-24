@@ -208,7 +208,7 @@ vraćanje izbora je rušilo WinUI.
    „Svi").
 7. **Top lista** je sopstveni tab (`//toplist`) → `TopListViewModel`: rang-lista
    animea po proseku ocena datih u ovoj aplikaciji (`GetCommunityTopAsync`), sa
-   čipovima za minimalan broj ocena; prva tri mesta su zlatna/srebrna/bronzana
+   čipovima „Najbolje ocenjeni" / „Najpopularniji" (po broju ocena); prva tri mesta su zlatna/srebrna/bronzana
    (`CommunityRankItem.Medal` + `DataTrigger`).
 
 ### 2.8 Admin panel (samo za `Role == "Admin"`)
@@ -286,7 +286,7 @@ Svi nasleđuju `BaseViewModel` (`IsBusy`, `IsNotBusy`, `Title`, `ErrorMessage`).
 | `LogoutViewModel.cs` | Odjava | `LogoutCommand` (briše sesiju → Login), `CancelCommand` (nazad na poslednji tab). |
 | `CommunityViewModel.cs` | Zajednica | Feed korisnika koje pratim, pretraga po imenu, segmenti Feed/Svi/Pratim/Prate me, follow-unfollow, bedž za nove pratioce, otvaranje tuđeg profila i top liste. `CommunityUserItem` je stavka liste sa svojim follow stanjem. |
 | `UserProfileViewModel.cs` | Tuđi profil | `IQueryAttributable` prima `userId`; brojači, follow dugme, provera privatnosti (`CanSeeList`) i raspodela po statusu koja vodi na recenzije tog korisnika. |
-| `TopListViewModel.cs` | Top lista zajednice | Rangiranje animea po proseku lokalnih ocena (`GetCommunityTopAsync`), filter minimalnog broja ocena, otvaranje detalja animea. |
+| `TopListViewModel.cs` | Top lista zajednice | Rangiranje animea po proseku lokalnih ocena (`GetCommunityTopAsync`), izbor rangiranja (najbolje ocenjeni / najpopularniji), otvaranje detalja animea. |
 | `AdminViewModel.cs` | Admin | Pretraga korisnika, banovanje/odbanovanje, brisanje naloga, navigacija na recenzije jednog korisnika ili svih. |
 | `AdminUserReviewsViewModel.cs` | Admin → recenzije korisnika | `IQueryAttributable` prima `userId` (0 = svi); učitava i briše recenzije. |
 

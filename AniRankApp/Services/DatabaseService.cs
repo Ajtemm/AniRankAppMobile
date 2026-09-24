@@ -222,25 +222,29 @@ public class DatabaseService
     /// <summary>
     /// Top anime by the ratings given inside this app. Only rated entries count
     /// ("Plan to Watch" / "Dropped" are stored with Rating = 0).
+    /// <paramref name="byPopularity"/> = most ratings first; otherwise highest average first.
     /// </summary>
-    public async Task<List<CommunityRankItem>> GetCommunityTopAsync(int minVotes = 1, int limit = 30)
+    public async Task<List<CommunityRankItem>> GetCommunityTopAsync(bool byPopularity = false, int limit = 30)
     {
         await InitAsync();
 
         var rows = await _db!.QueryAsync<Review>(
             "SELECT AnimeKitsuId, AnimeTitle, AnimeImageUrl, Rating FROM Reviews WHERE Rating >= 1");
 
-        return rows
+        var items = rows
             .GroupBy(r => r.AnimeKitsuId)
-            .Where(g => g.Count() >= minVotes)
             .Select(g => new CommunityRankItem(
                 g.Key,
                 g.First().AnimeTitle,
                 g.First().AnimeImageUrl,
                 Math.Round(g.Average(r => r.Rating), 1),
-                g.Count()))
-            .OrderByDescending(x => x.Average)
-            .ThenByDescending(x => x.Votes)
+                g.Count()));
+
+        var ordered = byPopularity
+            ? items.OrderByDescending(x => x.Votes).ThenByDescending(x => x.Average)
+            : items.OrderByDescending(x => x.Average).ThenByDescending(x => x.Votes);
+
+        return ordered
             .Take(limit)
             .Select((x, i) => x with { Rank = i + 1 })
             .ToList();

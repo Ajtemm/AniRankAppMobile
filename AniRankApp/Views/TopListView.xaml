@@ -17,10 +17,10 @@
                    Style="{StaticResource Caption}" />
         </VerticalStackLayout>
 
-        <!-- Minimum number of votes: one tap, no dialog -->
+        <!-- Ranking mode (best rated / most popular): one tap, no dialog -->
         <controls:ChipGroup Grid.Row="1"
-                            ItemsSource="{Binding MinVotesOptions}"
-                            SelectedItem="{Binding SelectedMinVotesOption}" />
+                            ItemsSource="{Binding SortOptions}"
+                            SelectedItem="{Binding SelectedSortOption}" />
 
         <RefreshView Grid.Row="2"
                      IsRefreshing="{Binding IsRefreshing}"

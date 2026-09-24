@@ -23,26 +23,26 @@ public partial class TopListViewModel : BaseViewModel
 
     public ObservableCollection<CommunityRankItem> Items { get; } = new();
 
-    /// <summary>Minimum number of ratings an anime needs to appear.</summary>
-    public IReadOnlyList<string> MinVotesOptions { get; } = new[] { "Sve ocene", "Bar 2 ocene", "Bar 3 ocene" };
+    /// <summary>How the list is ranked: by average rating or by number of ratings.</summary>
+    public IReadOnlyList<string> SortOptions { get; } = new[] { "Najbolje ocenjeni", "Najpopularniji" };
 
     [ObservableProperty] private bool isRefreshing;
-    [ObservableProperty] private int selectedMinVotesIndex;
+    [ObservableProperty] private int selectedSortIndex;
 
-    /// <summary>Chip-friendly view of <see cref="SelectedMinVotesIndex"/>.</summary>
-    public string SelectedMinVotesOption
+    /// <summary>Chip-friendly view of <see cref="SelectedSortIndex"/>.</summary>
+    public string SelectedSortOption
     {
-        get => MinVotesOptions[SelectedMinVotesIndex];
+        get => SortOptions[SelectedSortIndex];
         set
         {
-            var index = MinVotesOptions.ToList().IndexOf(value);
-            if (index >= 0) SelectedMinVotesIndex = index;
+            var index = SortOptions.ToList().IndexOf(value);
+            if (index >= 0) SelectedSortIndex = index;
         }
     }
 
-    partial void OnSelectedMinVotesIndexChanged(int value)
+    partial void OnSelectedSortIndexChanged(int value)
     {
-        OnPropertyChanged(nameof(SelectedMinVotesOption));
+        OnPropertyChanged(nameof(SelectedSortOption));
         _ = LoadAsync();
     }
 
@@ -60,7 +60,7 @@ public partial class TopListViewModel : BaseViewModel
             IsRefreshing = true;
             ErrorMessage = null;
 
-            var top = await _db.GetCommunityTopAsync(SelectedMinVotesIndex + 1);
+            var top = await _db.GetCommunityTopAsync(byPopularity: SelectedSortIndex == 1);
 
             Items.Clear();
             foreach (var item in top)

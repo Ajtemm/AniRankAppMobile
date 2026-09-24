@@ -224,7 +224,7 @@ Dodatno: skeleton kartice i `ActivityIndicator` spinneri pri učitavanju;
 - **Ocena zajednice** pored Kitsu ocene — prosek ocena datih *u ovoj aplikaciji*
   (`GetAnimeRatingStatsAsync`, `AVG` u SQL-u).
 - **Top lista zajednice** (tab `//toplist`): rang-lista animea po lokalnim ocenama,
-  sa filterom minimalnog broja ocena.
+  sa čipovima „Najbolje ocenjeni" (po proseku) i „Najpopularniji" (po broju ocena).
 - **Napredak po epizodama** (`Review.EpisodesWatched`): polje u formi (sakriveno za
   „Plan to Watch") i bedž „Odgledano: N ep." na karticama.
 - **Offline režim**: poslednja učitana strana se čuva u tabelu `CachedAnime`; bez
